@@ -1,4 +1,4 @@
-# infra-azure-internal
+# infra-azure-prod
 # Azure Infrastructure Setup
 
 This repository contains Terraform configurations for setting up Azure infrastructure in two stages: base infrastructure and Zipline core environment.
