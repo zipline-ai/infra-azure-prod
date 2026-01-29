@@ -1,0 +1,15 @@
+apiVersion: azmonitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: zipline-hub-monitor
+  namespace: zipline-system
+  labels:
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: orchestration-hub  # adjust selector based on your hub service labels
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
