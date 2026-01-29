@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipline-orchestration-ui
+  namespace: zipline-system
+  labels:
+    app: zipline-ui
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.orchestration.ui.replicas }}
+  selector:
+    matchLabels:
+      app: zipline-ui
+  template:
+    metadata:
+      labels:
+        app: zipline-ui
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: orchestration-sa
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: web-ui
+          image: "{{ .Values.orchestration.ui.image }}:{{ .Values.global.version }}"
+          env:
+            - name: API_BASE_URL
+              value: "http://orchestration-hub-service"
+            - name: DATABASE_URL
+              value: "postgres://{{.Values.database.orchestration.username}}@{{.Values.database.orchestration.fqdn}}:5432/{{.Values.database.orchestration.database}}?sslmode=require"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: AZURE_REGION
+              value: "{{ .Values.azure.location }}"
+            - name: PUBLIC_ORCH_SERVER_NAME
+              value: "dev-zipline-orchestration"
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          resources:
+          {{- toYaml .Values.orchestration.ui.resources | nindent 12 }}
+          ports:
+            - containerPort: {{ .Values.orchestration.ui.port }}
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "pg-secret-provider"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestration-ui-service
+  namespace: zipline-system
+  labels:
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: zipline-ui
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.orchestration.ui.port }}
+      protocol: TCP
+  type: ClusterIP
