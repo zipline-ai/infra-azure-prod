@@ -3,9 +3,6 @@
 variable "customer_name" {
   description = "Your Unique Zipline Account Name"
 }
-variable "artifact_prefix" {
-  description = "The azure storage container where zipline artifacts will be stored e.g. \"https://ziplineai2.blob.core.windows.net/dev-zipline-artifacts\""
-}
 variable "zipline_version" {
   description = "Which version of the Zipline Hub to use"
 }
@@ -27,14 +24,13 @@ variable "azure_storage_account_name" {
   description = "The Azure storage account to use"
 }
 
-variable "azure_storage_account_id" {
-  description = "The ID of the Azure storage account to use"
-}
-
-
 variable "azure_storage_account_key" {
   description = "The Azure storage account key to use"
   sensitive = true
+}
+
+variable "storage_account_resource_group" {
+  description = "The resource group where the storage account is setup"
 }
 
 # Cosmos DB Configuration
@@ -199,11 +195,6 @@ variable "kyuubi_aks_cluster_ca_certificate" {
 
 variable "kyuubi_workload_identity_client_id" {
   description = "The workload identity client id for kyuubi"
-  default = ""
-}
-
-variable "kyuubi_dns_label" {
-  description = "The dns label for referencing kyuubi"
   default = ""
 }
 
