@@ -55,7 +55,7 @@ resource "helm_release" "zipline_orchestration" {
       cosmos_table_partitions_dataset     = "TABLE_PARTITIONS"
       cosmos_data_quality_metrics_dataset = "DATA_QUALITY_METRICS"
 
-      kyuubi_host = var.kyuubi_host
+      kyuubi_host = var.kyuubi_host != "" ? var.kyuubi_host : "${var.customer_name}-zipline-kyuubi.${var.location}.cloudapp.azure.com"
       kyuubi_port = var.kyuubi_port
 
       spark_history_server_url = "http://spark-history-${var.customer_name}.${var.location}.cloudapp.azure.com:18080"
@@ -150,21 +150,12 @@ locals {
   # Select the final credentials to pass to Helm
   final_client_id     = local.create_auth_app ? azuread_application.zipline_auth[0].client_id : var.oauth_client_id
   final_client_secret = local.create_auth_app ? azuread_application_password.zipline_auth[0].value : var.oauth_client_secret
-  oauth2_config_google = <<-EOT
-    provider = "google"
-    # For Google Workspace, you usually want to restrict to your domain
-    # email_domains = ["yourcompany.com"]
-    email_domains = ${jsonencode(var.email_domains)}
-    upstreams = [ "file:///dev/null" ]
-  EOT
-  oauth2_config_azure = <<-EOT
+  oauth2_config_file = <<-EOT
     provider = "azure"
     oidc_issuer_url = "https://login.microsoftonline.com/${data.azurerm_client_config.current.tenant_id}/v2.0"
     email_domains = ${jsonencode(var.email_domains)}
     upstreams = [ "file:///dev/null" ]
   EOT
-  # Select the correct config based on the variable
-  oauth2_config_file = var.oauth_provider == "google" ? local.oauth2_config_google : local.oauth2_config_azure
 }
 
 # 1. Generate a random cookie secret for OAuth2 Proxy
@@ -407,7 +398,7 @@ resource "helm_release" "kyuubi" {
     templatefile("${path.module}/kyuubi-values.yaml.tpl", {
       workload_identity_client_id = var.kyuubi_workload_identity_client_id
       azure_storage_account_name  = var.azure_storage_account_name
-      kyuubi_dns_label            = var.kyuubi_dns_label
+      kyuubi_dns_label            = "${var.customer_name}-zipline-kyuubi"
     })
   ]
 

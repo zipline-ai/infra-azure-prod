@@ -69,7 +69,7 @@ database:
   orchestration:
     fqdn: "${orchestration_db_fqdn}"
     database: "${orchestration_db_database}"
-    username: "${workload_identity_client_name}"
+    username: "${workload_identity_name}"
 
 kyuubi:
   host: "${kyuubi_host}"
