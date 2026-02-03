@@ -305,19 +305,9 @@ output "kyuubi_log_analytics_workspace_name" {
   value = azurerm_log_analytics_workspace.kyuubi.name
 }
 
-output "kyuubi_internal_host" {
-  description = "Internal Kubernetes service hostname for Kyuubi"
-  value       = "kyuubi.kyuubi.svc.cluster.local"
-}
-
 output "kyuubi_internal_port" {
   description = "Kyuubi Thrift Binary port"
   value       = 10009
-}
-
-output "kyuubi_rest_dns" {
-  description = "External DNS for Kyuubi REST API"
-  value       = "${var.customer_name}-kyuubi.${var.location}.cloudapp.azure.com"
 }
 
 output "kyuubi_workload_identity_client_id" {
