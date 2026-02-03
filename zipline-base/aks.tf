@@ -120,6 +120,10 @@ output "resource_group" {
   value = azurerm_resource_group.hub_rg.name
 }
 
+output "aks_cluster_name" {
+  value = azurerm_kubernetes_cluster.hub_cluster.name
+}
+
 output "aks_host" {
   value = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.host
   sensitive = true
