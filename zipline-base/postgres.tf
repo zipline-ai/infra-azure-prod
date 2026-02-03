@@ -4,8 +4,6 @@ resource "azurerm_postgresql_flexible_server" "orchestration_instance" {
   resource_group_name           = azurerm_resource_group.hub_rg.name
   version                       = "16"
   public_network_access_enabled = true
-  administrator_login           = "locker_user"
-  administrator_password        = random_password.db_password.result
 
   storage_mb   = 32768
   storage_tier = "P4"
@@ -13,7 +11,7 @@ resource "azurerm_postgresql_flexible_server" "orchestration_instance" {
 
   authentication {
     active_directory_auth_enabled = true
-    password_auth_enabled         = true
+    password_auth_enabled         = false
   }
 
   depends_on = [
@@ -82,40 +80,6 @@ resource "azurerm_key_vault" "main" {
   rbac_authorization_enabled = true
   purge_protection_enabled  = false
 }
-
-# Role assignment already exists for users, not managed by Terraform
-# resource "azurerm_role_assignment" "kv_terraform_secrets_officer" {
-#   scope                = azurerm_key_vault.main.id
-#   role_definition_name = "Key Vault Secrets Officer"
-#   principal_id         = data.azurerm_client_config.current.object_id
-# }
-
-
-
-resource "azurerm_key_vault_secret" "pg_admin_username" {
-  name         = "pg-admin-username"
-  value        = "locker_user"
-  key_vault_id = azurerm_key_vault.main.id
-}
-
-resource "azurerm_key_vault_secret" "pg_admin_password" {
-  name         = "pg-admin-password"
-  value        = random_password.db_password.result
-  key_vault_id = azurerm_key_vault.main.id
-}
-
-resource "azurerm_key_vault_secret" "pg_hub_url" {
-  name         = "pg-hub-url"
-  value        = "jdbc:postgresql://${azurerm_postgresql_flexible_server.orchestration_instance.fqdn}:5432/${azurerm_postgresql_flexible_server_database.orchestration_database.name}?sslmode=require"
-  key_vault_id = azurerm_key_vault.main.id
-}
-
-resource "azurerm_key_vault_secret" "pg_ui_url" {
-  name         = "pg-ui-url"
-  value        = "postgres://${azurerm_key_vault_secret.pg_admin_username.value}@${azurerm_postgresql_flexible_server.orchestration_instance.fqdn}:5432/${azurerm_postgresql_flexible_server_database.orchestration_database.name}?sslmode=require"
-  key_vault_id = azurerm_key_vault.main.id
-}
-
 
 output "postgres_server_name" {
   value = azurerm_postgresql_flexible_server.orchestration_instance.name

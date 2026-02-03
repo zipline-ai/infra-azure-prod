@@ -69,11 +69,14 @@ database:
   orchestration:
     fqdn: "${orchestration_db_fqdn}"
     database: "${orchestration_db_database}"
-    username: "${orchestration_db_username}"
+    username: "${workload_identity_client_name}"
 
 kyuubi:
   host: "${kyuubi_host}"
   port: "${kyuubi_port}"
+
+spark:
+  historyServerUrl: "${spark_history_server_url}"
 
 cosmos:
   table_partitions_dataset: "${cosmos_table_partitions_dataset}"
@@ -83,6 +86,10 @@ azure:
   location: "${azure_location}"
   storage_account_name: "${azure_storage_account_name}"
   storage_account_key: "${azure_storage_account_key}"
+  log_analytics_workspace_id: "${log_analytics_workspace_id}"
+  prometheus_query_endpoint: "${prometheus_query_endpoint}"
+  prometheus_namespace: "${prometheus_namespace}"
+  grafana_endpoint: "${grafana_endpoint}"
 
 workloadIdentity:
   clientId: "${workload_identity_client_id}"

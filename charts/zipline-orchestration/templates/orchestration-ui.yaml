@@ -30,19 +30,20 @@ spec:
               value: "http://orchestration-hub-service"
             - name: DATABASE_URL
               value: "postgres://{{.Values.database.orchestration.username}}@{{.Values.database.orchestration.fqdn}}:5432/{{.Values.database.orchestration.database}}?sslmode=require"
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: password
             - name: AZURE_REGION
               value: "{{ .Values.azure.location }}"
-            - name: PUBLIC_ORCH_SERVER_NAME
-              value: "dev-zipline-orchestration"
-          volumeMounts:
-            - name: secrets-store-inline
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
+            - name: GRAFANA_ENDPOINT
+              value: "{{ .Values.azure.grafana_endpoint }}"
+            - name: ORCH_CONTAINER_NAME
+              value: "orchestration-hub"
+            - name: AZURE_LOG_ANALYTICS_WORKSPACE_ID
+              value: "{{ .Values.azure.log_analytics_workspace_id }}"
+            - name: PROMETHEUS_QUERY_ENDPOINT
+              value: "{{ .Values.azure.prometheus_query_endpoint }}"
+            - name: PROMETHEUS_NAMESPACE
+              value: "{{ .Values.azure.prometheus_namespace }}"
+            - name: AZURE_CUSTOMER_ID
+              value: "{{ .Values.global.customer_name }}"
           resources:
           {{- toYaml .Values.orchestration.ui.resources | nindent 12 }}
           ports:

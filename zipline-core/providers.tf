@@ -30,3 +30,23 @@ provider "helm" {
     cluster_ca_certificate = base64decode(var.aks_cluster_ca_certificate)
   }
 }
+
+# Kubernetes provider for kyuubi cluster
+provider "kubernetes" {
+  alias                  = "kyuubi"
+  host                   = var.kyuubi_aks_host
+  client_certificate     = base64decode(var.kyuubi_aks_client_certificate)
+  client_key             = base64decode(var.kyuubi_aks_client_key)
+  cluster_ca_certificate = base64decode(var.kyuubi_aks_cluster_ca_certificate)
+}
+
+# Helm provider for kyuubi cluster
+provider "helm" {
+  alias = "kyuubi"
+  kubernetes = {
+    host                   = var.kyuubi_aks_host
+    client_certificate     = base64decode(var.kyuubi_aks_client_certificate)
+    client_key             = base64decode(var.kyuubi_aks_client_key)
+    cluster_ca_certificate = base64decode(var.kyuubi_aks_cluster_ca_certificate)
+  }
+}

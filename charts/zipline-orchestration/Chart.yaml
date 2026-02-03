@@ -24,7 +24,3 @@ dependencies:
     repository: "https://kubernetes.github.io/ingress-nginx"
     alias: ingress-nginx-hub
     condition: ingress-nginx-hub.enabled
-#  - name: cert-manager
-#    version: v1.13.3  # Use the latest stable version
-#    repository: https://charts.jetstack.io
-#    condition: certManager.enabled
