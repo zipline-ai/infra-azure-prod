@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipline-orchestration-hub
+  namespace: zipline-system
+  labels:
+    app: orchestration-hub
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.orchestration.hub.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: orchestration-hub
+  template:
+    metadata:
+      labels:
+        app: orchestration-hub
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: orchestration-sa
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: orchestration-hub
+          image: "{{ .Values.orchestration.hub.image }}:{{ .Values.global.version }}"
+          imagePullPolicy: Always
+          env:
+            - name: DB_URL
+              value: "jdbc:postgresql://{{ .Values.database.orchestration.fqdn}}:5432/{{.Values.database.orchestration.database}}?sslmode=require"
+            - name: DB_USERNAME
+              value: {{ .Values.database.orchestration.username | quote }}
+            - name: CUSTOMER_ID
+              value: {{ .Values.global.customer_name | quote }}
+            - name: ARTIFACT_PREFIX
+              value: {{ .Values.global.artifact_prefix | quote }}
+            - name: ORCHESTRATION_PORT
+              value: "{{ .Values.orchestration.hub.port }}"
+            - name: TABLE_PARTITIONS_DATASET
+              value: "{{ .Values.cosmos.table_partitions_dataset }}"
+            - name: DATA_QUALITY_METRICS_DATASET
+              value: "{{ .Values.cosmos.data_quality_metrics_dataset }}"
+            - name: HUB_FRONTEND_URL
+              value: "http://orchestration-ui-service/"
+            - name: AZURE_REGION
+              value: "{{ .Values.azure.location }}"
+            - name: AZURE_STORAGE_ACCOUNT_NAME
+              value: "{{ .Values.azure.storage_account_name }}"
+            - name: AZURE_STORAGE_ACCOUNT_KEY
+              value: "{{ .Values.azure.storage_account_key }}"
+            - name: KYUUBI_HOST
+              value: "{{ .Values.kyuubi.host }}"
+            - name: KYUUBI_PORT
+              value: "{{ .Values.kyuubi.port }}"
+            - name: SPARK_HISTORYSERVER_URL
+              value: "{{ .Values.spark.historyServerUrl }}"
+            - name: CHRONON_METRICS_READER
+              value: "prometheus"
+            - name: KV_STORE_TYPE
+              value: "cosmos"
+            - name: COSMOS_PREFERRED_REGIONS
+              value: "{{ .Values.azure.location }}"
+            - name: COSMOS_ENDPOINT
+              value: "https://zipline-{{ .Values.global.customer_name | lower }}-instance.documents.azure.com:443/"
+            - name: COSMOS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cosmos-credentials
+                  key: primary-key
+            - name: COSMOS_DATABASE
+              value: "chronon"
+          volumeMounts:
+            - name: cosmos-secrets-store
+              mountPath: "/mnt/cosmos-secrets"
+              readOnly: true
+          ports:
+            - containerPort: {{ .Values.orchestration.hub.port }}
+            - name: metrics
+              containerPort: 8905
+          resources:
+          {{- toYaml .Values.orchestration.hub.resources | nindent 12 }}
+      volumes:
+        - name: cosmos-secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "cosmos-secret-provider"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestration-hub-service
+  namespace: zipline-system
+  labels:
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: orchestration-hub
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.orchestration.hub.port }}
+      protocol: TCP
+  type: ClusterIP
