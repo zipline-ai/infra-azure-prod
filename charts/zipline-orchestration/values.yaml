@@ -1,0 +1,151 @@
+# Default values for zipline-orchestration
+global:
+  customer_name: ""
+  project_id: ""
+  artifact_prefix: ""
+  version: ""
+
+# Cosmos DB configuration
+cosmos:
+  table_partitions_dataset: ""
+  data_quality_metrics_dataset: ""
+
+# Azure configuration
+azure:
+  location: ""
+  storage_account_name: ""
+  storage_account_key: ""
+  log_analytics_workspace_id: ""
+  prometheus_query_endpoint: ""
+  prometheus_namespace: ""
+  grafana_endpoint: ""
+
+# Service account configuration
+workloadIdentity:
+  enabled: true
+  clientId: ""
+
+keyvault:
+  name: ""
+  tenantId: ""
+  userAssignedIdentityID: ""
+
+kyuubi:
+  host: ""
+  port: ""
+
+# Spark History Server configuration
+spark:
+  historyServerUrl: ""
+
+# Domain configuration
+domains:
+  ziplineUI: ""  # If empty, will use nip.io
+  hub: ""        # If empty, will use nip.io
+
+# Static IP addresses (will be created by Terraform)
+staticIPs:
+  orchestrationUI: ""
+  orchestrationUIName: ""
+  orchestrationHub: ""
+  orchestrationHubName: ""
+
+
+# Orchestration services configuration
+orchestration:
+  hub:
+    image: "ziplineai/hub-azure"
+    replicas: 1
+    port: 3903
+    resources:
+      limits:
+        cpu: "6"
+        memory: "28Gi"
+
+  ui:
+    image: "ziplineai/web-ui"
+    replicas: 1
+    port: 3000
+    resources:
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+
+# Ingress configuration
+
+# Ingress NGINX for UI
+ingress-nginx-ui:
+  enabled: true
+  controller:
+    ingressClassResource:
+      name: nginx-ui
+      enabled: true
+      default: false
+      controllerValue: "k8s.io/ingress-nginx-ui"
+    ingressClass: nginx-ui
+    service:
+      loadBalancerIP: ""  # Set by Terraform
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-resource-group: ""  # Set by Terraform
+    # Important: Use different election IDs to avoid conflicts
+    electionID: ingress-controller-leader-ui
+    # Use a specific namespace or use different suffixes
+    namespaceOverride: ingress-nginx-ui
+
+# Ingress NGINX for Hub
+ingress-nginx-hub:
+  enabled: true
+  controller:
+    ingressClassResource:
+      name: nginx-hub
+      enabled: true
+      default: false
+      controllerValue: "k8s.io/ingress-nginx-hub"
+    ingressClass: nginx-hub
+    service:
+      loadBalancerIP: ""  # Set by Terraform
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-resource-group: ""  # Set by Terraform
+        service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/ping"
+    # Important: Different election ID
+    electionID: ingress-controller-leader-hub
+    # Different namespace
+    namespaceOverride: ingress-nginx-hub
+
+ingress:
+  ui:
+    className: nginx-ui
+    host: ""
+    annotations:
+      nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hub:
+    className: nginx-hub
+    host: ""
+    annotations:
+      nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+      nginx.ingress.kubernetes.io/health-check-path: "/ping"
+      nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+database:
+  orchestration:
+    fqdn: ""
+    database: "execution-info"
+    username: "locker_user"
+
+certManager:
+  enabled: true
+  installCRDs: true
+
+# Let's Encrypt configuration
+clusterIssuer:
+  enabled: true
+  email: ""
+  server: "https://acme-v02.api.letsencrypt.org/directory"
+
+
+imagePullSecrets:
+  - name: my-registry-key

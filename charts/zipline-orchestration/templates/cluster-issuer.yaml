@@ -1,0 +1,28 @@
+{{- if or .Values.certManager.enabled .Values.clusterIssuer.enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: {{ .Values.clusterIssuer.server }}
+    email: {{ .Values.clusterIssuer.email }}
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      # Solver for the Hub Domain
+      - http01:
+          ingress:
+            class: {{ .Values.ingress.hub.className }}
+        selector:
+          dnsNames:
+            - {{ .Values.ingress.hub.host | quote }}
+
+            # Solver for the UI Domain
+      - http01:
+          ingress:
+            class: {{ .Values.ingress.ui.className }}
+        selector:
+          dnsNames:
+            - {{ .Values.ingress.ui.host | quote }}
+{{- end }}

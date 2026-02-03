@@ -1,0 +1,490 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Default values for kyuubi.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Kyuubi server numbers
+replicaCount: 2
+
+# controls how Kyuubi server pods are created during initial scale up,
+# when replacing pods on nodes, or when scaling down.
+# The default policy is `OrderedReady`, alternative policy is `Parallel`.
+podManagementPolicy: OrderedReady
+
+# Optional additional annotations to add to Kyuubi server pods
+podAnnotations: {}
+
+# Optional additional labels to add to Kyuubi server pods
+podLabels:
+  azure.workload.identity/use: "true"
+
+# Minimum number of seconds for which a newly created kyuubi server
+# should be ready without any of its container crashing for it to be considered available.
+minReadySeconds: 30
+
+# maximum number of revisions that will be maintained in the StatefulSet's revision history.
+revisionHistoryLimit: 10
+
+# indicates the StatefulSetUpdateStrategy that will be employed to update Kyuubi server Pods in the StatefulSet
+# when a revision is made to Template.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    partition: 0
+
+image:
+  repository: apache/kyuubi
+  pullPolicy: IfNotPresent
+  tag: 1.10.0-spark
+
+imagePullSecrets: []
+
+# ServiceAccount used for Kyuubi create/list/delete pod in Kubernetes
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # Specifies ServiceAccount name to be used (created if `create: true`)
+  name: ~
+  # Annotations to add to the ServiceAccount
+  annotations:
+    azure.workload.identity/client-id: "52a48acf-9dd6-476c-b432-ac46995a7173"
+
+# priorityClass used for Kyuubi server pod
+priorityClass:
+  # Specifies whether a priorityClass should be created
+  create: false
+  # Specifies priorityClass name to be used (created if `create: true`)
+  name: ~
+  # half of system-cluster-critical by default
+  value: 1000000000
+
+# Role-based access control
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+  # RBAC rules for Spark on Kubernetes
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "services", "configmaps", "persistentvolumeclaims"]
+      verbs: ["create", "get", "list", "watch", "patch", "delete", "deletecollection"]
+
+service:
+  # Service type: ClusterIP, NodePort, or LoadBalancer
+  type: ClusterIP
+  # Optional annotations for the service (e.g., for cloud provider load balancer configuration)
+  annotations: {}
+  # Azure example for stable DNS hostname:
+  #   service.beta.kubernetes.io/azure-dns-label-name: my-kyuubi
+  # This creates: my-kyuubi.<region>.cloudapp.azure.com
+
+  # configuration of the headless service
+  headless:
+    # Optional additional annotations to add to the headless service
+    annotations: {}
+
+# Ingress configuration for HTTP-based protocols (thriftHttp, rest)
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: kyuubi.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          # Which backend to use: rest or thriftHttp
+          backend: rest
+  tls: []
+  # - secretName: kyuubi-tls
+  #   hosts:
+  #     - kyuubi.example.com
+
+server:
+  # Thrift Binary protocol (HiveServer2 compatible)
+  thriftBinary:
+    enabled: true
+    port: 10009
+    service:
+      type: ClusterIP
+      port: "{{ .Values.server.thriftBinary.port }}"
+      nodePort: ~
+      annotations: {}
+      # candidates are ClientIP or None
+      # https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
+      sessionAffinity: ~
+      sessionAffinityConfig: {}
+      #  sessionAffinityConfig:
+      #    clientIP:
+      #      timeoutSeconds: 10800
+
+  # Thrift HTTP protocol (HiveServer2 compatible)
+  thriftHttp:
+    enabled: false
+    port: 10010
+    service:
+      type: ClusterIP
+      port: "{{ .Values.server.thriftHttp.port }}"
+      nodePort: ~
+      annotations: {}
+      # candidates are ClientIP or None
+      # https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
+      sessionAffinity: ~
+      sessionAffinityConfig: {}
+      #  sessionAffinityConfig:
+      #    clientIP:
+      #      timeoutSeconds: 10800
+
+  # REST API protocol (experimental)
+  rest:
+    enabled: true
+    port: 10099
+    service:
+      type: LoadBalancer
+      port: "{{ .Values.server.rest.port }}"
+      nodePort: ~
+      annotations:
+        service.beta.kubernetes.io/azure-dns-label-name: kyuubi-dev
+      # candidates are ClientIP or None
+      # https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
+      sessionAffinity: ~
+      sessionAffinityConfig: {}
+      #  sessionAffinityConfig:
+      #    clientIP:
+      #      timeoutSeconds: 10800
+
+  # MySQL compatible text protocol (experimental)
+  mysql:
+    enabled: false
+    port: 3309
+    service:
+      type: ClusterIP
+      port: "{{ .Values.server.mysql.port }}"
+      nodePort: ~
+      annotations: {}
+      # candidates are ClientIP or None
+      # https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
+      sessionAffinity: ~
+      sessionAffinityConfig: {}
+      #  sessionAffinityConfig:
+      #    clientIP:
+      #      timeoutSeconds: 10800
+
+# Kyuubi configuration files
+kyuubiConf:
+  # $KYUUBI_CONF_DIR directory
+  dir: /opt/kyuubi/conf
+  # Configuration files from the specified keys (file name) and values (file content)
+  files:
+    'kyuubi-defaults.conf': |
+      kyuubi.authentication=NONE
+      # Operation logs - these are viewable in Kyuubi's Web UI
+      kyuubi.operation.log.dir.root={{ .Values.logging.workDir }}/{{ .Values.logging.operationLogDir }}
+      kyuubi.engine.operation.log.dir.root={{ .Values.logging.workDir }}/{{ .Values.logging.engineOperationLogDir }}
+    'log4j2.xml': |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Configuration status="INFO">
+        <Appenders>
+          <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c{1.}: %m%n%ex"/>
+          </Console>
+          <RollingFile name="file" fileName="{{ .Values.logging.dir }}/kyuubi-server.log"
+                       filePattern="{{ .Values.logging.dir }}/kyuubi-server.log.%i">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c{1.}: %m%n%ex"/>
+            <Policies>
+              <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="{{ .Values.logging.maxLogFiles }}"/>
+          </RollingFile>
+        </Appenders>
+        <Loggers>
+          <Root level="INFO">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="file"/>
+          </Root>
+          <Logger name="org.apache.kyuubi" level="INFO"/>
+          <Logger name="org.apache.spark" level="WARN"/>
+          <Logger name="org.apache.hadoop" level="WARN"/>
+          <Logger name="org.apache.hive" level="WARN"/>
+        </Loggers>
+      </Configuration>
+  #files:
+  #  'kyuubi-defaults.conf': |
+  #    kyuubi.authentication=NONE
+  #    kyuubi.engine.share.level=USER
+
+  # Configuration files from the list of existing ConfigMaps and Secrets
+  filesFrom: []
+  #filesFrom:
+  #- configMap:
+  #    name: kyuubi-configs
+  #- secret:
+  #    name: kyuubi-secrets
+  #- secret:
+  #    name: ssl-secrets
+  #    items:
+  #      - key: key-store
+  #        path: certs/keystore.jks
+  #      - key: trust-store
+  #        path: certs/truststore.jks
+
+# Hadoop configuration files
+hadoopConf:
+  # $HADOOP_CONF_DIR directory
+  dir: /opt/hadoop/conf
+  # Configuration files from the specified keys (file name) and values (file content)
+  files:
+    'core-site.xml': |
+      <?xml version="1.0"?>
+      <configuration>
+        <!-- Azure ABFS OAuth with Workload Identity -->
+        <property>
+          <name>fs.azure.account.auth.type.ziplineai2.dfs.core.windows.net</name>
+          <value>OAuth</value>
+        </property>
+        <property>
+          <name>fs.azure.account.oauth.provider.type.ziplineai2.dfs.core.windows.net</name>
+          <value>org.apache.hadoop.fs.azurebfs.oauth2.MsiTokenProvider</value>
+        </property>
+      </configuration>
+  #files:
+  # 'core-site.xml': |
+  #   <?xml version="1.0"?>
+  #   <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+  #   <configuration>
+  #     <property>
+  #       <name>hadoop.tmp.dir</name>
+  #       <value>/tmp/hadoop-${user.name}</value>
+  #     </property>
+  #   </configuration>
+
+  # Configuration files from the list of existing ConfigMaps and Secrets
+  filesFrom: []
+  #filesFrom:
+  #- configMap:
+  #    name: hadoop-configs
+  #- secret:
+  #    name: hadoop-secrets
+  #- secret:
+  #    name: ssl-secrets
+  #    items:
+  #      - key: key-store
+  #        path: certs/keystore.jks
+  #      - key: trust-store
+  #        path: certs/truststore.jks
+
+# Spark configuration, see https://github.com/apache/spark/tree/master/conf and Spark documentation for more details
+sparkConf:
+  # $SPARK_CONF_DIR directory
+  dir: /opt/spark/conf
+  # Configuration files from the specified keys (file name) and values (file content)
+  files:
+    'spark-defaults.conf': |
+      # Deploy mode - submit to Kubernetes cluster
+      spark.submit.deployMode=cluster
+      spark.kubernetes.container.image=apache/spark:3.5.2-java17
+      spark.kubernetes.namespace=kyuubi
+      spark.kubernetes.authenticate.driver.serviceAccountName=kyuubi
+      # Azure Blob Storage dependencies
+      spark.jars.packages=org.apache.hadoop:hadoop-azure:3.4.2,org.apache.hadoop:hadoop-common:3.4.2
+      spark.driver.extraJavaOptions=-Divy.cache.dir=/tmp -Divy.home=/tmp
+      spark.executor.extraJavaOptions=-Divy.cache.dir=/tmp -Divy.home=/tmp
+  #files:
+  #  'spark-defaults.conf': |
+  #    spark.submit.deployMode=cluster
+  #    spark.kubernetes.container.image=apache/spark:3.5.0
+  #    spark.kubernetes.authenticate.driver.serviceAccountName=spark
+  #    spark.kubernetes.file.upload.path=s3a://kyuubi/spark
+  #    # S3 dependencies
+  #    spark.jars.packages=org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262
+  #    spark.driver.extraJavaOptions=-Divy.cache.dir=/tmp -Divy.home=/tmp
+  #    # S3A configuration
+  #    spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem
+  #    spark.hadoop.fs.s3a.endpoint=http://object-storage:80
+  #    spark.hadoop.fs.s3a.access.key=******
+  #    spark.hadoop.fs.s3a.secret.key=********
+  #    spark.hadoop.fs.s3a.path.style.access=true
+  #    spark.hadoop.fs.s3a.fast.upload=true
+
+  # Configuration files from the list of existing ConfigMaps and Secrets
+  filesFrom: []
+  #filesFrom:
+  #- configMap:
+  #    name: spark-configs
+  #- secret:
+  #    name: spark-secrets
+  #- secret:
+  #    name: ssl-secrets
+  #    items:
+  #      - key: key-store
+  #        path: certs/keystore.jks
+  #      - key: trust-store
+  #        path: certs/truststore.jks
+
+# Command to launch Kyuubi server (templated)
+command: ~
+# Arguments to launch Kyuubi server (templated)
+args: ~
+
+# Environment variables (templated)
+env:
+  - name: SPARK_DIST_CLASSPATH
+    value: "/opt/kyuubi/azure-jars/*"
+# Environment variables from ConfigMaps and Secrets (templated)
+envFrom: []
+
+# Additional volumes for Kyuubi pod (templated)
+volumes:
+  - name: azure-jars
+    emptyDir: {}
+# Additional volumeMounts for Kyuubi container (templated)
+volumeMounts:
+  - name: azure-jars
+    mountPath: /opt/kyuubi/azure-jars
+
+# Additional init containers for Kyuubi pod (templated)
+initContainers:
+  - name: download-azure-jars
+    image: curlimages/curl:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        cd /opt/kyuubi/azure-jars
+        curl -LO https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure/3.4.2/hadoop-azure-3.4.2.jar
+        curl -LO https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.4.2/hadoop-common-3.4.2.jar
+        curl -LO https://repo1.maven.org/maven2/com/azure/azure-storage-blob/12.25.1/azure-storage-blob-12.25.1.jar
+        curl -LO https://repo1.maven.org/maven2/com/azure/azure-storage-common/12.24.1/azure-storage-common-12.24.1.jar
+        curl -LO https://repo1.maven.org/maven2/com/azure/azure-core/1.46.0/azure-core-1.46.0.jar
+        curl -LO https://repo1.maven.org/maven2/com/azure/azure-core-http-netty/1.14.0/azure-core-http-netty-1.14.0.jar
+        curl -LO https://repo1.maven.org/maven2/com/azure/azure-storage-internal-avro/12.10.1/azure-storage-internal-avro-12.10.1.jar
+        curl -LO https://repo1.maven.org/maven2/com/microsoft/azure/azure-storage/7.0.1/azure-storage-7.0.1.jar
+        ls -la
+    volumeMounts:
+      - name: azure-jars
+        mountPath: /opt/kyuubi/azure-jars
+# Additional containers for Kyuubi pod (templated)
+containers: []
+
+# Resource requests and limits for Kyuubi pods
+resources: {}
+#  resources:
+#    requests:
+#      cpu: 2
+#      memory: 4Gi
+#    limits:
+#      cpu: 4
+#      memory: 10Gi
+
+# Liveness probe
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /api/v1/ping
+    port: rest
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 10
+  successThreshold: 1
+
+# Readiness probe
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /api/v1/ping
+    port: rest
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 10
+  successThreshold: 1
+
+# Persistence for work directory
+persistence:
+  enabled: false
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  storageClass: ~
+
+# Constrain Kyuubi pods to nodes with specific node labels
+nodeSelector: {}
+# Allow to schedule Kyuubi pods on nodes with matching taints
+tolerations: []
+# Constrain Kyuubi pods to nodes by complex affinity/anti-affinity rules
+affinity: {}
+
+# Kyuubi pods security context
+securityContext: {}
+
+# Logging configuration
+logging:
+  # Server log directory (KYUUBI_LOG_DIR)
+  dir: /opt/kyuubi/logs
+  # Work directory root for operation logs and engine logs
+  workDir: /opt/kyuubi/work
+  # Maximum number of log files to retain after server restart
+  maxLogFiles: 5
+  # Operation log directory (relative to workDir or absolute path)
+  operationLogDir: operation_logs
+  # Engine operation log directory (relative to workDir or absolute path)
+  engineOperationLogDir: engine_operation_logs
+
+# Metrics configuration
+metrics:
+  # Enable metrics system, used for 'kyuubi.metrics.enabled' property
+  enabled: true
+  # A comma-separated list of metrics reporters, used for 'kyuubi.metrics.reporters' property
+  reporters: PROMETHEUS
+  # Prometheus port, used for 'kyuubi.metrics.prometheus.port' property
+  prometheusPort: 10019
+
+  # PodMonitor by Prometheus Operator
+  podMonitor:
+    # Enable PodMonitor creation
+    enabled: false
+    # List of pod endpoints serving metrics to be scraped by Prometheus, see Prometheus Operator docs for more details
+    podMetricsEndpoints: []
+    #  podMetricsEndpoints：
+    #    - path: /metrics
+    #      port: prometheus
+    # Additional labels for PodMonitor to be discovered by Prometheus
+    labels: {}
+
+  # ServiceMonitor by Prometheus Operator
+  serviceMonitor:
+    # Enable ServiceMonitor creation
+    enabled: false
+    # List of service endpoints serving metrics to be scraped by Prometheus, see Prometheus Operator docs for more details
+    endpoints: []
+    #  endpoints:
+    #    - port: prometheus
+    # Additional labels to be used to make ServiceMonitor discovered by Prometheus
+    labels: {}
+
+  # PrometheusRule by Prometheus Operator
+  prometheusRule:
+    # Enable PrometheusRule creation
+    enabled: false
+    # Content of Prometheus rule file
+    groups: []
+    # Additional labels to be used to make PrometheusRule discovered by Prometheus
+    labels: {}
