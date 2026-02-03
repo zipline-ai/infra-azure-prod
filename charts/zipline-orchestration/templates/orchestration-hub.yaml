@@ -32,15 +32,7 @@ spec:
             - name: DB_URL
               value: "jdbc:postgresql://{{ .Values.database.orchestration.fqdn}}:5432/{{.Values.database.orchestration.database}}?sslmode=require"
             - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: username
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: password
+              value: {{ .Values.database.orchestration.username | quote }}
             - name: CUSTOMER_ID
               value: {{ .Values.global.customer_name | quote }}
             - name: ARTIFACT_PREFIX
@@ -64,10 +56,14 @@ spec:
               value: "{{ .Values.kyuubi.host }}"
             - name: KYUUBI_PORT
               value: "{{ .Values.kyuubi.port }}"
+            - name: SPARK_HISTORYSERVER_URL
+              value: "{{ .Values.spark.historyServerUrl }}"
             - name: CHRONON_METRICS_READER
               value: "prometheus"
             - name: KV_STORE_TYPE
               value: "cosmos"
+            - name: COSMOS_PREFERRED_REGIONS
+              value: "{{ .Values.azure.location }}"
             - name: COSMOS_ENDPOINT
               value: "https://zipline-{{ .Values.global.customer_name | lower }}-instance.documents.azure.com:443/"
             - name: COSMOS_KEY
@@ -78,9 +74,6 @@ spec:
             - name: COSMOS_DATABASE
               value: "chronon"
           volumeMounts:
-            - name: secrets-store-inline
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
             - name: cosmos-secrets-store
               mountPath: "/mnt/cosmos-secrets"
               readOnly: true
@@ -91,12 +84,6 @@ spec:
           resources:
           {{- toYaml .Values.orchestration.hub.resources | nindent 12 }}
       volumes:
-        - name: secrets-store-inline
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: "pg-secret-provider"
         - name: cosmos-secrets-store
           csi:
             driver: secrets-store.csi.k8s.io

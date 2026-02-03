@@ -103,8 +103,8 @@ variable "postgres_fqdn" {
 
 # Identity and Security
 
-variable "workload_identity_client_id" {
-  description = "The workload identity client id"
+variable "workload_identity_name" {
+  description = "The workload identity name for the aks cluster"
 }
 
 variable "keyvault_name" {
@@ -171,4 +171,43 @@ variable "email_domains" {
   description = "List of allowed email domains for OAuth2 Proxy. Use ['*'] to allow any domain."
   type        = list(string)
   default     = ["*"]
+}
+
+# Kyuubi cluster configuration. These are only needed if kyuubi host is left empty
+variable "kyuubi_aks_host" {
+  description = "The host of the aks cluster for kyuubi"
+  default = ""
+}
+
+variable "kyuubi_aks_client_certificate" {
+  description = "The client certificate for the aks cluster for kyuubi"
+  default = ""
+  sensitive = true
+}
+
+variable "kyuubi_aks_client_key" {
+  description = "The client key for the aks cluster for kyuubi"
+  default = ""
+  sensitive = true
+}
+
+variable "kyuubi_aks_cluster_ca_certificate" {
+  description = "The cluster CA certificate for the aks cluster for kyuubi"
+  default = ""
+  sensitive = true
+}
+
+variable "kyuubi_workload_identity_client_id" {
+  description = "The workload identity client id for kyuubi"
+  default = ""
+}
+
+variable "kyuubi_dns_label" {
+  description = "The dns label for referencing kyuubi"
+  default = ""
+}
+
+# Logs Analytics Configuration
+variable "log_analytics_workspace_workspace_id" {
+  description = "The workspace id for the log analytics workspace to save logs"
 }

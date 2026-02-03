@@ -15,6 +15,10 @@ azure:
   location: ""
   storage_account_name: ""
   storage_account_key: ""
+  log_analytics_workspace_id: ""
+  prometheus_query_endpoint: ""
+  prometheus_namespace: ""
+  grafana_endpoint: ""
 
 # Service account configuration
 workloadIdentity:
@@ -29,6 +33,10 @@ keyvault:
 kyuubi:
   host: ""
   port: ""
+
+# Spark History Server configuration
+spark:
+  historyServerUrl: ""
 
 # Domain configuration
 domains:

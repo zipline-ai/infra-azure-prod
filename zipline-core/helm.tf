@@ -19,6 +19,10 @@ resource "helm_release" "cert_manager" {
   ]
 }
 
+data "azurerm_user_assigned_identity" "workload_identity" {
+  resource_group_name = var.aks_resource_group
+  name                = var.workload_identity_name
+}
 
 # Deploy Zipline Orchestration using Helm
 
@@ -36,12 +40,17 @@ resource "helm_release" "zipline_orchestration" {
       version         = var.zipline_version
       enable_oauth    = var.enable_oauth
 
+      log_analytics_workspace_id = var.log_analytics_workspace_workspace_id
+      prometheus_query_endpoint  = azurerm_monitor_workspace.aks.query_endpoint
+      prometheus_namespace       = kubernetes_namespace_v1.zipline_system.id
+      grafana_endpoint           = azurerm_dashboard_grafana.aks.endpoint
+
       azure_storage_account_name = var.azure_storage_account_name
       azure_storage_account_key  = var.azure_storage_account_key
 
       orchestration_db_fqdn     = var.postgres_fqdn
       orchestration_db_database = var.postgres_db_name
-      orchestration_db_username = "locker_user"
+      orchestration_db_username = data.azurerm_user_assigned_identity.workload_identity.name
 
       cosmos_table_partitions_dataset     = "TABLE_PARTITIONS"
       cosmos_data_quality_metrics_dataset = "DATA_QUALITY_METRICS"
@@ -49,7 +58,10 @@ resource "helm_release" "zipline_orchestration" {
       kyuubi_host = var.kyuubi_host
       kyuubi_port = var.kyuubi_port
 
-      workload_identity_client_id = var.workload_identity_client_id
+      spark_history_server_url = "http://spark-history-${var.customer_name}.${var.location}.cloudapp.azure.com:18080"
+
+      workload_identity_client_id = data.azurerm_user_assigned_identity.workload_identity.client_id
+      workload_identity_name      = data.azurerm_user_assigned_identity.workload_identity.name
       image_pull_secret_name      = kubernetes_secret_v1.docker_hub_creds.metadata[0].name
 
       keyvault_name                  = var.keyvault_name
@@ -61,8 +73,8 @@ resource "helm_release" "zipline_orchestration" {
       orchestration_ui_static_ip_name  = azurerm_public_ip.ui_ingress.name
       orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
 
-      hub_dns_name = var.hub_domain
-      ui_dns_name  = var.ui_domain
+      hub_dns_name = "${var.hub_domain}"
+      ui_dns_name  = "${var.ui_domain}"
       cert_manager_email = var.admin_email
 
       node_resource_group              = var.aks_node_resource_group
@@ -365,4 +377,41 @@ Once configured, please allow a few minutes for DNS propagation.
 Cert-Manager will automatically provision TLS certificates once the records resolve.
 --------------------------------------------------------------------------------
 EOT
+}
+
+#############################################################
+# Kyuubi Deployment
+#############################################################
+
+# Kyuubi namespace (deployed to kyuubi cluster)
+resource "kubernetes_namespace_v1" "kyuubi" {
+  count = var.kyuubi_host == "" ? 1 : 0
+  provider = kubernetes.kyuubi
+
+  metadata {
+    name = "kyuubi"
+  }
+}
+
+# Deploy Kyuubi using Helm (to kyuubi cluster)
+resource "helm_release" "kyuubi" {
+  count = var.kyuubi_host == "" ? 1 : 0
+  provider = helm.kyuubi
+
+  name             = "kyuubi"
+  chart            = "../charts/kyuubi"
+  namespace        = "kyuubi"
+  create_namespace = false
+
+  values = [
+    templatefile("${path.module}/kyuubi-values.yaml.tpl", {
+      workload_identity_client_id = var.kyuubi_workload_identity_client_id
+      azure_storage_account_name  = var.azure_storage_account_name
+      kyuubi_dns_label            = var.kyuubi_dns_label
+    })
+  ]
+
+  depends_on = [
+    kubernetes_namespace_v1.kyuubi,
+  ]
 }

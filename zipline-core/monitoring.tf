@@ -48,6 +48,12 @@ resource "azurerm_role_assignment" "grafana_monitor_data_reader" {
   principal_id         = azurerm_dashboard_grafana.aks.identity[0].principal_id
 }
 
+resource "azurerm_role_assignment" "workload_monitoring_reader" {
+  scope                = azurerm_monitor_workspace.aks.id
+  role_definition_name = "Monitoring Data Reader"
+  principal_id         = data.azurerm_user_assigned_identity.workload_identity.principal_id
+}
+
 #############################################################
 # Prometheus Data Collection
 #############################################################

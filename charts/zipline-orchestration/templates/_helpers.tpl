@@ -48,25 +48,3 @@ Selector labels
 app.kubernetes.io/name: {{ include "zipline-orchestration.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
-
-{{/*
-Generate domain for orchestration UI
-*/}}
-{{/*{{- define "zipline-orchestration.orchestrationUIDomain" -}}*/}}
-{{/*{{- if .Values.domains.ziplineUI }}*/}}
-{{/*{{- .Values.domains.ziplineUI }}*/}}
-{{/*{{- else }}*/}}
-{{/*{{- printf "%s.nip.io" .Values.staticIPs.orchestrationUI }}*/}}
-{{/*{{- end }}*/}}
-{{/*{{- end }}*/}}
-
-{{/**/}}
-{{/*Generate domain for orchestration hub*/}}
-{{/**/}}
-{{/*{{- define "zipline-orchestration.orchestrationHubDomain" -}}*/}}
-{{/*{{- if .Values.domains.hub }}*/}}
-{{/*{{- .Values.domains.hub }}*/}}
-{{/*{{- else }}*/}}
-{{/*{{- printf "%s.nip.io" .Values.staticIPs.orchestrationHub }}*/}}
-{{/*{{- end }}*/}}
-{{/*{{- end }}*/}}

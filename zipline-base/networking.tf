@@ -54,6 +54,14 @@ resource "azurerm_subnet" "private_endpoints" {
   address_prefixes     = ["10.0.5.0/24"]
 }
 
+# Subnet for Kyuubi cluster
+resource "azurerm_subnet" "kyuubi_subnet" {
+  name                 = "${var.customer_name}-zipline-kyuubi-subnet"
+  resource_group_name  = azurerm_resource_group.hub_rg.name
+  virtual_network_name = azurerm_virtual_network.hub_vnet.name
+  address_prefixes     = ["10.0.6.0/24"]
+}
+
 # Private endpoint for PostgreSQL to allow AKS to connect
 resource "azurerm_private_endpoint" "postgres" {
   name                = "${var.customer_name}-zipline-postgres-pe"
