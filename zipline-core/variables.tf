@@ -161,12 +161,6 @@ variable "oauth_client_secret" {
   sensitive   = true
 }
 
-variable "oauth_provider" {
-  description = "The OAuth2 Provider to use (e.g., 'azure', 'google'). Defaults to 'azure'."
-  type        = string
-  default     = "azure"
-}
-
 variable "email_domains" {
   description = "List of allowed email domains for OAuth2 Proxy. Use ['*'] to allow any domain."
   type        = list(string)

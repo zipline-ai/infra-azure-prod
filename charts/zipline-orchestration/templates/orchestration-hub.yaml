@@ -44,7 +44,6 @@ spec:
             - name: DATA_QUALITY_METRICS_DATASET
               value: "{{ .Values.cosmos.data_quality_metrics_dataset }}"
             - name: HUB_FRONTEND_URL
-{{/*              value: "https://{{ include "zipline-orchestration.orchestrationUIDomain" . }}/"*/}}
               value: "http://orchestration-ui-service/"
             - name: AZURE_REGION
               value: "{{ .Values.azure.location }}"
