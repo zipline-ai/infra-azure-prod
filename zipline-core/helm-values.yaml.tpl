@@ -48,8 +48,10 @@ ingress:
     className: nginx-hub
     host: "${hub_dns_name}"
     annotations:
+%{ if enable_oauth ~}
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
       nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+%{ endif ~}
       nginx.ingress.kubernetes.io/health-check-path: "/ping"
       nginx.ingress.kubernetes.io/proxy-body-size: "20m"
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -57,8 +59,10 @@ ingress:
     className: nginx-ui
     host: "${ui_dns_name}"
     annotations:
+%{ if enable_oauth ~}
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
       nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+%{ endif ~}
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
 database:

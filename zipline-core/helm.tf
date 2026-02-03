@@ -34,6 +34,7 @@ resource "helm_release" "zipline_orchestration" {
       azure_location  = var.location
       artifact_prefix = "https://${var.azure_storage_account_name}.blob.core.windows.net/${azurerm_storage_container.zipline_artifacts.name}"
       version         = var.zipline_version
+      enable_oauth    = var.enable_oauth
 
       azure_storage_account_name = var.azure_storage_account_name
       azure_storage_account_key  = var.azure_storage_account_key
@@ -60,8 +61,8 @@ resource "helm_release" "zipline_orchestration" {
       orchestration_ui_static_ip_name  = azurerm_public_ip.ui_ingress.name
       orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
 
-      hub_dns_name = "${var.hub_domain}"
-      ui_dns_name  = "${var.ui_domain}"
+      hub_dns_name = var.hub_domain
+      ui_dns_name  = var.ui_domain
       cert_manager_email = var.admin_email
 
       node_resource_group              = var.aks_node_resource_group
@@ -115,7 +116,6 @@ resource "azurerm_public_ip" "hub_ingress" {
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
-  domain_name_label   = "${var.customer_name}-zipline-hub"
 }
 
 resource "azurerm_public_ip" "ui_ingress" {
@@ -124,7 +124,6 @@ resource "azurerm_public_ip" "ui_ingress" {
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
-  domain_name_label   = "${var.customer_name}-zipline-ui"
 }
 
 # ------------------------------------------------------------------
