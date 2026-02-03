@@ -271,6 +271,16 @@ description = "Client ID for Key Vault managed identity"
 default = "<KEYVAULT_IDENTITY_CLIENT_ID>"
 }
 
+# Networking
+
+variable "hub_vnet_name" {
+description = "The name of the hub vnet"
+}
+
+variable "hub_subnet_name" {
+description = "The name of the hub subnet"
+}
+
 # Service Configuration
 variable "kyuubi_host" {
 description = "Hostname for Kyuubi service"

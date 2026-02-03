@@ -111,6 +111,17 @@ variable "keyvault_identity_client_id" {
   description = "The keyvault identity client id"
 }
 
+# Networking
+
+variable "hub_vnet_name" {
+  description = "The name of the hub vnet"
+}
+
+variable "hub_subnet_name" {
+  description = "The name of the hub subnet"
+}
+
+
 # Kyuubi Service Configuration
 
 variable "kyuubi_host" {

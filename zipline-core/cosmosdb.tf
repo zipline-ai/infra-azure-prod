@@ -4,18 +4,18 @@ data "azurerm_resource_group" "hub_rg" {
 }
 
 data "azurerm_virtual_network" "hub_vnet" {
-  name                = "${var.customer_name}-zipline-hub-vnet"
+  name                = var.hub_vnet_name
   resource_group_name = data.azurerm_resource_group.hub_rg.name
 }
 
 data "azurerm_subnet" "hub_subnet" {
-  name                 = "${var.customer_name}-zipline-hub-subnet"
+  name                 = var.hub_subnet_name
   virtual_network_name = data.azurerm_virtual_network.hub_vnet.name
   resource_group_name  = data.azurerm_resource_group.hub_rg.name
 }
 
 data "azurerm_key_vault" "main" {
-  name                = "${var.customer_name}-zipline-secrets"
+  name                = var.keyvault_name
   resource_group_name = data.azurerm_resource_group.hub_rg.name
 }
 
