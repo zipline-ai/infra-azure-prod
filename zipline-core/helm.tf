@@ -58,7 +58,7 @@ resource "helm_release" "zipline_orchestration" {
       kyuubi_host = var.kyuubi_host != "" ? var.kyuubi_host : "${var.customer_name}-zipline-kyuubi.${var.location}.cloudapp.azure.com"
       kyuubi_port = var.kyuubi_port
 
-      spark_history_server_url = "http://spark-history-${var.customer_name}.${var.location}.cloudapp.azure.com:18080"
+      spark_history_server_url = var.spark_history_server_url
 
       workload_identity_client_id = data.azurerm_user_assigned_identity.workload_identity.client_id
       workload_identity_name      = data.azurerm_user_assigned_identity.workload_identity.name

@@ -122,6 +122,10 @@ variable "kyuubi_port" {
   default = 10099
 }
 
+variable "spark_history_server_url" {
+  description = "The url of the spark history server"
+}
+
 # Domain Configuration
 
 variable "hub_domain" {
