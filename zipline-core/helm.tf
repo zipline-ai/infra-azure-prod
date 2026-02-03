@@ -239,10 +239,10 @@ resource "helm_release" "oauth2_proxy" {
       image = {
         tag = "v7.7.0"
       }
-      extraArgs = var.oauth_provider == "azure" ? {
+      extraArgs = {
         "oidc-extra-audience" = "api://${var.customer_name}-zipline-auth"
         "skip-jwt-bearer-tokens" = "true"
-      } : {}
+      }
       config = {
         # Use the locals calculated above
         clientID     = local.final_client_id

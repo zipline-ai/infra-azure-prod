@@ -161,15 +161,15 @@ variable "zipline_version" {
 description = "Version tag for Zipline hub components"
 default = "latest"
 }
+        
+variable "docker_token" {
+description = "A token for pulling the private images from Docker. Someone from Zipline should provide this to you"
+default = "<DOCKER_TOKEN>"
+}
 
 variable "location" {
 description = "Azure region for resource deployment"
 default = "<LOCATION>"
-}
-
-variable "docker_token" {
-description = "A token for pulling the private images from Docker. Someone from Zipline should provide this to you"
-default = "<DOCKER_TOKEN>"
 }
 
 variable "subscription_id" {
@@ -183,11 +183,15 @@ description = "Name of the Azure Storage Account"
 default = "<STORAGE_ACCOUNT_NAME>"
 }
 
-variable "azure_storage_account_id" {
-description = "Resource ID of the Azure Storage Account"
+variable "azure_storage_account_key" {
+description = "The Azure storage account key to use"
 default = "<STORAGE_ACCOUNT_ID>"
 }
-
+        
+variable "storage_account_resource_group" {
+description = "The resource group where the storage account is setup"
+default = "<RESOURCE_GROUP>"
+}        
 # Cosmos DB Configuration
 variable "cosmos_total_throughput_limit" {
 description = "Total throughput limit for Cosmos DB account"
@@ -289,12 +293,36 @@ description = "Domain name you control for the UI service"
 default = "<UI_DOMAIN>"
 }
 
-# Authentication and Access
-variable "admin_email" {
-description = "Email address for receiving certificate updates"
-default = "<ADMIN_EMAIL>"
+variable "spark_history_server_url" {
+description = "The url of the spark history server"
+default = "<SPARK_HISTORY_SERVER_URL>"
 }
 
+# Domain Configuration
+
+variable "hub_domain" {
+description = "The domain to use for initializing the Zipline Hub. This should be a domain you can set DNS records for."
+default = "<HUB_DOMAIN>"
+}
+
+variable "ui_domain" {
+description = "The domain to use for initializing the Zipline UI. This should be a domain you can set DNS records for."
+default = "<UI_DOMAIN>"
+}
+
+
+variable "admin_email" {
+description = "Email for receiving certificate updates"
+default = "<ADMIN_EMAIL>"
+}
+        
+# Authentication and Access
+
+variable "enable_oauth" {
+description = "Whether to use oauth to authenticate access to the Zipline Hub"
+default = true
+}
+        
 variable "oauth_client_id" {
 description = "Existing OAuth2 Client ID. If empty, a new App Registration will be created"
 default = ""
@@ -306,14 +334,45 @@ default = ""
 sensitive = true
 }
 
-variable "oauth_provider" {
-description = "The OAuth2 Provider to use (e.g., 'azure', 'google'). Defaults to 'azure'"
-default = "azure"
-}
 
 variable "email_domains" {
 description = "List of allowed email domains for OAuth2 Proxy. Use ['*'] to allow any domain"
 default = ["*"]
+}
+
+# Kyuubi cluster configuration. These are only needed if kyuubi host is left empty
+variable "kyuubi_aks_host" {
+description = "The host of the aks cluster for kyuubi"
+default = ""
+}
+
+variable "kyuubi_aks_client_certificate" {
+description = "The client certificate for the aks cluster for kyuubi"
+default = ""
+sensitive = true
+}
+
+variable "kyuubi_aks_client_key" {
+description = "The client key for the aks cluster for kyuubi"
+default = ""
+sensitive = true
+}
+
+variable "kyuubi_aks_cluster_ca_certificate" {
+description = "The cluster CA certificate for the aks cluster for kyuubi"
+default = ""
+sensitive = true
+}
+
+variable "kyuubi_workload_identity_client_id" {
+description = "The workload identity client id for kyuubi"
+default = ""
+}
+
+# Logs Analytics Configuration
+variable "log_analytics_workspace_workspace_id" {
+description = "The workspace id for the log analytics workspace to save logs"
+default = "<LOG_ANALYTICS_WORKSPACE_ID>"
 }
 ```
 
