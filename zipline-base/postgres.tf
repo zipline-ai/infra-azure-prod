@@ -19,7 +19,8 @@ resource "azurerm_postgresql_flexible_server" "orchestration_instance" {
   ]
   lifecycle {
     ignore_changes = [
-      authentication[0].tenant_id
+      authentication[0].tenant_id,
+      zone
     ]
   }
 }
@@ -49,25 +50,6 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "aks" {
   end_ip_address   = cidrhost(azurerm_subnet.hub_subnet.address_prefixes[0], -1)
 }
 
-# Allow specific IP addresses to access PostgreSQL
-# Add your allowed IP addresses here
-resource "azurerm_postgresql_flexible_server_firewall_rule" "allowed_ips" {
-  for_each = {
-    # List one to set this up
-    "Sean" = "184.14.224.39"
-  }
-
-  name             = "allow-${each.key}"
-  server_id        = azurerm_postgresql_flexible_server.orchestration_instance.id
-  start_ip_address = each.value
-  end_ip_address   = each.value
-}
-
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
-}
-
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "main" {
@@ -81,12 +63,22 @@ resource "azurerm_key_vault" "main" {
   purge_protection_enabled  = false
 }
 
+resource "azurerm_role_assignment" "kv_terraform_secrets_officer" {
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 output "postgres_server_name" {
   value = azurerm_postgresql_flexible_server.orchestration_instance.name
 }
 
 output "postgres_db_name" {
   value = azurerm_postgresql_flexible_server_database.orchestration_database.name
+}
+
+output "postgres_fqdn" {
+  value = azurerm_postgresql_flexible_server.orchestration_instance.fqdn
 }
 
 output "keyvault_name" {

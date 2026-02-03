@@ -11,7 +11,7 @@ metadata:
     {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.hub.className }}
-  {{- if ne .Values.ingress.hub.host "" -}}
+  {{ if ne .Values.ingress.hub.host "" }}
   tls:
     - hosts:
         - {{ .Values.ingress.hub.host }}
@@ -27,7 +27,7 @@ spec:
                 name: orchestration-hub-service
                 port:
                   number: 80
-  {{- else -}}
+  {{ else }}
   rules:
     - host: {{ .Values.staticIPs.orchestrationHub }}
       http:
@@ -40,4 +40,4 @@ spec:
                 port:
                   number: 80
 
-  {{- end -}}
+  {{ end }}

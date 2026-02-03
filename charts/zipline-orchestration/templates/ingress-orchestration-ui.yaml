@@ -11,7 +11,7 @@ metadata:
     {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.ui.className }}
-  {{- if ne .Values.ingress.ui.host "" -}}
+  {{ if ne .Values.ingress.ui.host "" }}
   tls:
     - hosts:
         - {{ .Values.ingress.ui.host }}
@@ -27,7 +27,7 @@ spec:
                 name: orchestration-ui-service
                 port:
                   number: 80
-  {{- else -}}
+  {{ else }}
   rules:
     - host: {{ .Values.staticIPs.orchestrationUI }}
       http:
@@ -39,4 +39,4 @@ spec:
                 name: orchestration-ui-service
                 port:
                   number: 80
-  {{- end -}}
+  {{ end }}
