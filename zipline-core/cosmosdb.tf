@@ -34,7 +34,7 @@ data "azurerm_resource_group" "cosmos_rg" {
 resource "azurerm_cosmosdb_account" "zipline_instance" {
   count               = var.cosmos_account != "" ? 0 : 1
   name                = "zipline-${lower(var.customer_name)}-instance"
-  location            = var.cosmos_rg != "" ? data.azurerm_resource_group.cosmos_rg.0.location : azurerm_resource_group.cosmos_rg.0.location
+  location            = var.cosmos_location != "" ? var.cosmos_location : azurerm_resource_group.cosmos_rg.0.location
   resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
@@ -73,7 +73,6 @@ data "azurerm_cosmosdb_account" "zipline_instance" {
   resource_group_name = var.cosmos_rg
   name = var.cosmos_account
 }
-
 
 # SQL Database with autoscale
 resource "azurerm_cosmosdb_sql_database" "chronon" {
