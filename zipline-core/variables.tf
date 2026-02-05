@@ -133,6 +133,11 @@ variable "kyuubi_port" {
   default = 10099
 }
 
+variable "enable_kyuubi_auth" {
+  description = "Whether to enable kyuubi authentication. If enabled, kyuubi_username and kyuubi_password must be set in the provided keyvault"
+  default = false
+}
+
 variable "spark_history_server_url" {
   description = "The url of the spark history server"
 }

@@ -1,7 +1,6 @@
 # Default values for zipline-orchestration
 global:
   customer_name: ""
-  project_id: ""
   artifact_prefix: ""
   version: ""
 
@@ -33,15 +32,17 @@ keyvault:
 kyuubi:
   host: ""
   port: ""
+  credentials:
+    enabled: false
 
 # Spark History Server configuration
 spark:
   historyServerUrl: ""
 
-# Domain configuration
+# Domain configuration for SSL certificates
 domains:
-  ziplineUI: ""  # If empty, will use nip.io
-  hub: ""        # If empty, will use nip.io
+  ziplineUI: ""
+  hub: ""
 
 # Static IP addresses (will be created by Terraform)
 staticIPs:
@@ -134,7 +135,6 @@ database:
   orchestration:
     fqdn: ""
     database: "execution-info"
-    username: "locker_user"
 
 certManager:
   enabled: true
