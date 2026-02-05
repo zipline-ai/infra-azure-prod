@@ -37,5 +37,4 @@ override.tf.json
 terraform.rc
 
 # Helm
-charts/*/charts/
 *.tgz
