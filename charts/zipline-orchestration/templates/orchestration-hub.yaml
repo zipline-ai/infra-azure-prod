@@ -32,7 +32,15 @@ spec:
             - name: DB_URL
               value: "jdbc:postgresql://{{ .Values.database.orchestration.fqdn}}:5432/{{.Values.database.orchestration.database}}?sslmode=require"
             - name: DB_USERNAME
-              value: {{ .Values.database.orchestration.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
             - name: CUSTOMER_ID
               value: {{ .Values.global.customer_name | quote }}
             - name: ARTIFACT_PREFIX
@@ -55,6 +63,18 @@ spec:
               value: "{{ .Values.kyuubi.host }}"
             - name: KYUUBI_PORT
               value: "{{ .Values.kyuubi.port }}"
+            {{ if .Values.kyuubi.credentials.enabled }}
+            - name: KYUUBI_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: kyuubi-credentials
+                  key: username
+            - name: KYUUBI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kyuubi-credentials
+                  key: password
+            {{ end }}
             - name: SPARK_HISTORYSERVER_URL
               value: "{{ .Values.spark.historyServerUrl }}"
             - name: CHRONON_METRICS_READER
@@ -73,8 +93,8 @@ spec:
             - name: COSMOS_DATABASE
               value: "chronon"
           volumeMounts:
-            - name: cosmos-secrets-store
-              mountPath: "/mnt/cosmos-secrets"
+            - name: zipline-secrets-store
+              mountPath: "/mnt/secrets-store"
               readOnly: true
           ports:
             - containerPort: {{ .Values.orchestration.hub.port }}
@@ -83,12 +103,12 @@ spec:
           resources:
           {{- toYaml .Values.orchestration.hub.resources | nindent 12 }}
       volumes:
-        - name: cosmos-secrets-store
+        - name: zipline-secrets-store
           csi:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: "cosmos-secret-provider"
+              secretProviderClass: "zipline-secret-provider"
 ---
 apiVersion: v1
 kind: Service

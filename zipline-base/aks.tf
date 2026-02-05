@@ -148,6 +148,10 @@ output "aks_node_resource_group" {
   value = azurerm_kubernetes_cluster.hub_cluster.node_resource_group
 }
 
+output "aks_resource_group" {
+  value = azurerm_resource_group.hub_rg.name
+}
+
 output "workload_identity_name" {
   value = azurerm_user_assigned_identity.workload.name
 }

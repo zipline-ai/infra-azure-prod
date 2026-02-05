@@ -66,31 +66,56 @@ bash az aks get-credentials --resource-group <resource-group-name> --name <clust
 2. **Create a values file** (`values.yaml`):
 
 global: 
-   customer_name: "my-customer" 
-   location: "westus" 
+   customer_name: "my-customer"
    artifact_prefix: "https://<storage-account>.blob.core.windows.net/warehouse" 
-   zipline_version: "latest" # or specific version
+   version: "latest" # or specific version
 
-database: 
-   host: "<postgres-server-name>.postgres.database.azure.com" 
-   username: "locker_user" 
-   password: "<database-password>" 
-   database: "execution_info"
+cosmos:
+   table_partitions_dataset: "TABLE_PARTITIONS"
+   data_quality_metrics_dataset: "DATA_QUALITY_METRICS"
 
-keyVault: 
-   name: "<keyvault-name>"
-   tenantId: "<tenant-id>"
+azure:
+   location: "westus"
+   storage_account_name: "<storage-account-name>"
+   storage_account_key: "<storage-account-key>"
+   log_analytics_workspace_id: "<workspace-id>"
+   prometheus_query_endpoint: "<prometheus-endpoint>"
+   prometheus_namespace: "<prometheus-namespace>"
+   grafana_endpoint: "<grafana-endpoint>"
 
-identity: 
+workloadIdentity:
    clientId: "<managed-identity-client-id>"
 
-storage: 
-   accountName: "<storage-account-name>
+keyvault:
+   name: "<keyvault-name>"
+   tenantId: "<tenant-id>"
+   userAssignedIdentityID: "<user-assigned-identity-id>"
+
+kyuubi:
+   host: "<kyuubi-host>"
+   port: 10099
+   credentials:
+      enabled: true
+
+spark:
+   historyServerUrl: "<spark-history-server-url>"
 
 # Optional: Configure custom domains
-domains: 
-   ziplineUI: "ui.mydomain.com" 
+domains:
+   ziplineUI: "ui.mydomain.com"
    hub: "hub.mydomain.com"
+
+# Configure static IP addresses for ingresses
+staticIPs:
+   orchestrationUI: "<orchestration-ui-ip>"
+   orchestrationUIName: "<orchestration-ui-name>"
+   orchestrationHub: "<orchestration-hub-ip>"
+   orchestrationHubName: "<orchestration-hub-name>"
+
+database: 
+   fqdn: "<postgres-server-name>.postgres.database.azure.com"
+   database: "execution_info"
+
 
 3. **Install the chart**:
 

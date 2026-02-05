@@ -3,7 +3,9 @@ resource "azurerm_postgresql_flexible_server" "orchestration_instance" {
   location                      = azurerm_resource_group.hub_rg.location
   resource_group_name           = azurerm_resource_group.hub_rg.name
   version                       = "16"
-  public_network_access_enabled = true
+  public_network_access_enabled = false
+  administrator_login           = "locker_user"
+  administrator_password        = random_password.db_password.result
 
   storage_mb   = 32768
   storage_tier = "P4"
@@ -11,7 +13,7 @@ resource "azurerm_postgresql_flexible_server" "orchestration_instance" {
 
   authentication {
     active_directory_auth_enabled = true
-    password_auth_enabled         = false
+    password_auth_enabled         = true
   }
 
   depends_on = [
@@ -52,6 +54,11 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "aks" {
 
 data "azurerm_client_config" "current" {}
 
+resource "random_password" "db_password" {
+  length  = 16
+  special = true
+}
+
 resource "azurerm_key_vault" "main" {
   name                = "${var.customer_name}-zipline-secrets"
   location            = azurerm_resource_group.hub_rg.location
@@ -68,6 +75,23 @@ resource "azurerm_role_assignment" "kv_terraform_secrets_officer" {
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+
+resource "azurerm_key_vault_secret" "pg_admin_username" {
+  name         = "pg-admin-username"
+  value        = "locker_user"
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_role_assignment.kv_terraform_secrets_officer]
+}
+
+resource "azurerm_key_vault_secret" "pg_admin_password" {
+  name         = "pg-admin-password"
+  value        = random_password.db_password.result
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_role_assignment.kv_terraform_secrets_officer]
+}
+
 
 output "postgres_server_name" {
   value = azurerm_postgresql_flexible_server.orchestration_instance.name

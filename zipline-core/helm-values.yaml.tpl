@@ -74,6 +74,8 @@ database:
 kyuubi:
   host: "${kyuubi_host}"
   port: "${kyuubi_port}"
+  credentials:
+    enabled: ${kyuubi_auth_enabled}
 
 spark:
   historyServerUrl: "${spark_history_server_url}"

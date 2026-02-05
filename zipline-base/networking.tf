@@ -81,3 +81,11 @@ resource "azurerm_private_endpoint" "postgres" {
     private_dns_zone_ids = [azurerm_private_dns_zone.hub_postgres_dns_zone.id]
   }
 }
+
+output "hub_vnet_name" {
+  value = azurerm_virtual_network.hub_vnet.name
+}
+
+output "hub_subnet_name" {
+  value = azurerm_subnet.hub_subnet.name
+}
