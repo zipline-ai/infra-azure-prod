@@ -127,36 +127,58 @@ bash helm install zipline-orchestration ./zipline-orchestration
 
 ## Configuration
 
-### Required Values
+### Global & Azure Settings
 
-| Parameter | Description |
-|-----------|-------------|
-| `global.customer_name` | Customer identifier |
-| `global.location` | Azure region |
-| `global.artifact_prefix` | Storage account blob URL prefix |
-| `global.version` | Zipline version to deploy |
-| `database.host` | PostgreSQL server hostname |
-| `database.username` | Database username |
-| `database.password` | Database password |
-| `database.database` | Database name |
-| `keyVault.name` | Azure Key Vault name |
-| `keyVault.tenantId` | Azure tenant ID |
-| `identity.clientId` | Managed Identity client ID |
-| `storage.accountName` | Azure Storage account name |
+| Parameter                | Description | Required |
+|--------------------------|-------------|----------|
+| `global.customer_name`   | Unique identifier for the customer environment | Yes | 
+| `global.artifact_prefix` | Blob storage URL prefix for artifacts (e.g., https://<account>.blob.core.windows.net/<container>) | Yes |
+| `global.version`         | Version tag for Zipline components (e.g., latest) | Yes |
+| `azure.location`         | Azure region (e.g., westus) | Yes |
+| `azure.storage_account_name` | Name of the Azure Storage Account | Yes |
+| `azure.storage_account_key` | Access key for the storage account | Yes |
+| `azure.log_analytics_workspace_id` | GUID for Log Analytics Workspace | Yes |
+| `azure.prometheus_query_endpoint` | Endpoint for Azure Managed Prometheus | Yes |
+| `azure.prometheus_namespace` | Prometheus namespace | Yes |
+| `azure.grafana_endpoint` | Grafana endpoint | Yes |
 
-### Optional Values
+### Identity & Security
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `domains.ziplineUI` | Custom domain for UI | `""` |
-| `domains.hub` | Custom domain for Hub | `""` |
+| Parameter | Description | Required | 
+|-----------|-------------|----------| 
+| `workloadIdentity.clientId` | Client ID of the User Assigned Managed Identity used by the pods | Yes | 
+| `keyvault.name` | Name of the Azure Key Vault | Yes | 
+| `keyvault.tenantId` | Azure Tenant ID | Yes | 
+| `keyvault.userAssignedIdentityID` | User Assigned Managed Identity ID | Client ID of the Identity used by the Key Vault CSI Driver (often same as workloadIdentity) | Yes |
+
+### Database & Services
+
+| Parameter | Description | Required | 
+|-----------|-------------|----------| 
+| `database.fqdn` | Full hostname of the PostgreSQL Flexible Server | Yes | 
+| `database.database` | Name of the database (e.g., execution_info) | Yes | 
+| `kyuubi.host` | Hostname or IP of the Kyuubi service | Yes | 
+| `kyuubi.port` | Port for Kyuubi service (default 10099) | Yes | 
+| `kyuubi.credentials.enabled` | Enable secret-based credentials for Kyuubi | No | 
+| `spark.historyServerUrl` | URL for the Spark History Server | Yes | 
+| `cosmos.table_partitions_dataset` | Cosmos DB dataset name | Yes |
+| `cosmos.data_quality_metrics_dataset` | Cosmos DB dataset name | Yes |
+
+### Network & Ingress
+
+| Parameter | Description | Required | 
+|-----------|-------------|----------| 
+| `staticIPs.orchestrationUI` | Static IP address for the UI Ingress | Yes | 
+| `staticIPs.orchestrationHub` | Static IP address for the Hub Ingress | Yes | 
+| `domains.ziplineUI` | Custom DNS domain for the UI (e.g., ui.example.com) | No | 
+| `domains.hub` | Custom DNS domain for the Hub (e.g., hub.example.com) | No |
 
 ## Accessing Services
 
 After deployment, services will be available at the configured ingress endpoints:
 
-- **Zipline UI**: `https://ui.<domain>`
-- **Orchestration Hub**: `https://hub.<domain>`
+- **Zipline UI**: `https://<ui-domain>`
+- **Orchestration Hub**: `https://<hub-domain>`
 
 ## Upgrading
 
