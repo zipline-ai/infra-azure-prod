@@ -52,6 +52,16 @@ variable "cosmos_zone_redundant" {
   default     = false
 }
 
+variable "cosmos_rg" {
+  description = "Optional: Cosmos DB resource group if you already have one setup"
+  type = string
+}
+
+variable "cosmos_account" {
+  description = "Optional: Cosmos DB account name if you already have one setup"
+  type = string
+}
+
 # AKS Configuration
 
 variable "aks_resource_group" {
@@ -134,9 +144,21 @@ variable "kyuubi_port" {
 }
 
 variable "enable_kyuubi_auth" {
-  description = "Whether to enable kyuubi authentication. If enabled, kyuubi_username and kyuubi_password must be set in the provided keyvault"
+  description = "Whether to enable kyuubi authentication. If enabled, kyuubi_username_secret and kyuubi_password_secret must be set in the provided keyvault"
   default = false
 }
+
+variable "kyuubi_username_secret" {
+  description = "The name of the secret in the keyvault holding the kyuubi username"
+  default = ""
+}
+
+
+variable "kyuubi_password_secret" {
+  description = "The name of the secret in the keyvault holding the kyuubi password"
+  default = ""
+}
+
 
 variable "spark_history_server_url" {
   description = "The url of the spark history server"
