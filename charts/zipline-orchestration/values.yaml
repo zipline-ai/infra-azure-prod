@@ -1,7 +1,6 @@
 # Default values for zipline-orchestration
 global:
   customer_name: ""
-  project_id: ""
   artifact_prefix: ""
   version: ""
 
@@ -40,10 +39,10 @@ kyuubi:
 spark:
   historyServerUrl: ""
 
-# Domain configuration
+# Domain configuration for SSL certificates
 domains:
-  ziplineUI: ""  # If empty, will use nip.io
-  hub: ""        # If empty, will use nip.io
+  ziplineUI: ""
+  hub: ""
 
 # Static IP addresses (will be created by Terraform)
 staticIPs:
