@@ -28,7 +28,6 @@ resource "azurerm_resource_group" "cosmos_rg" {
 
 data "azurerm_resource_group" "cosmos_rg" {
   count    = var.cosmos_rg != "" ? 1 : 0
-  location = var.cosmos_location
   name     = var.cosmos_rg
 }
 
@@ -56,7 +55,7 @@ resource "azurerm_cosmosdb_account" "zipline_instance" {
   }
 
   geo_location {
-    location          = azurerm_resource_group.cosmos_rg.location
+    location          = azurerm_resource_group.cosmos_rg.0.location
     failover_priority = 0
     zone_redundant    = var.cosmos_zone_redundant
   }
@@ -80,8 +79,8 @@ data "azurerm_cosmosdb_account" "zipline_instance" {
 resource "azurerm_cosmosdb_sql_database" "chronon" {
   count               = var.cosmos_database != "" ? 0 : 1
   name                = "chronon"
-  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.name
-  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.name
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
 
   autoscale_settings {
     max_throughput = var.cosmos_total_throughput_limit
@@ -111,7 +110,7 @@ resource "azurerm_private_endpoint" "cosmos_endpoint" {
 
   private_service_connection {
     name                           = "${var.customer_name}-zipline-cosmos-connection"
-    private_connection_resource_id = azurerm_cosmosdb_account.zipline_instance.id
+    private_connection_resource_id = var.cosmos_account != "" ? data.azurerm_cosmosdb_account.zipline_instance.0.id : azurerm_cosmosdb_account.zipline_instance.0.id
     subresource_names              = ["Sql"]
     is_manual_connection           = false
   }

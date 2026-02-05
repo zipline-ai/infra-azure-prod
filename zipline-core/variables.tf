@@ -55,16 +55,19 @@ variable "cosmos_zone_redundant" {
 variable "cosmos_rg" {
   description = "Optional: Cosmos DB resource group if you already have one setup"
   type = string
+  default = ""
 }
 
 variable "cosmos_account" {
   description = "Optional: Cosmos DB account name if you already have one setup"
   type = string
+  default = ""
 }
 
 variable "cosmos_database" {
   description = "Optional: Cosmos DB database name if you already have one setup"
   type = string
+  default = ""
 }
 
 # AKS Configuration
