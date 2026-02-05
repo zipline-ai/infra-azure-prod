@@ -62,6 +62,11 @@ variable "cosmos_account" {
   type = string
 }
 
+variable "cosmos_database" {
+  description = "Optional: Cosmos DB database name if you already have one setup"
+  type = string
+}
+
 # AKS Configuration
 
 variable "aks_resource_group" {
