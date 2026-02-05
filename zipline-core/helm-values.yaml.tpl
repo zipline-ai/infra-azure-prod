@@ -76,6 +76,8 @@ kyuubi:
   port: "${kyuubi_port}"
   credentials:
     enabled: ${kyuubi_auth_enabled}
+    username_secret: "${kyuubi_username_secret}"
+    password_secret: "${kyuubi_password_secret}"
 
 spark:
   historyServerUrl: "${spark_history_server_url}"

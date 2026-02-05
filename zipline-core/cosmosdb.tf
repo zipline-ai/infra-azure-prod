@@ -21,14 +21,21 @@ data "azurerm_key_vault" "main" {
 
 # Cosmos DB Resources
 resource "azurerm_resource_group" "cosmos_rg" {
+  count    = var.cosmos_rg != "" ? 0 : 1
   location = var.cosmos_location
   name     = "${var.customer_name}-zipline-cosmos-rg"
 }
 
+data "azurerm_resource_group" "cosmos_rg" {
+  count    = var.cosmos_rg != "" ? 1 : 0
+  name     = var.cosmos_rg
+}
+
 resource "azurerm_cosmosdb_account" "zipline_instance" {
+  count               = var.cosmos_account != "" ? 0 : 1
   name                = "zipline-${lower(var.customer_name)}-instance"
-  location            = azurerm_resource_group.cosmos_rg.location
-  resource_group_name = azurerm_resource_group.cosmos_rg.name
+  location            = var.cosmos_location != "" ? var.cosmos_location : azurerm_resource_group.cosmos_rg.0.location
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
 
@@ -48,7 +55,7 @@ resource "azurerm_cosmosdb_account" "zipline_instance" {
   }
 
   geo_location {
-    location          = azurerm_resource_group.cosmos_rg.location
+    location          = azurerm_resource_group.cosmos_rg.0.location
     failover_priority = 0
     zone_redundant    = var.cosmos_zone_redundant
   }
@@ -61,11 +68,18 @@ resource "azurerm_cosmosdb_account" "zipline_instance" {
   }
 }
 
+data "azurerm_cosmosdb_account" "zipline_instance" {
+  count = var.cosmos_account != "" ? 1 : 0
+  resource_group_name = var.cosmos_rg
+  name = var.cosmos_account
+}
+
 # SQL Database with autoscale
 resource "azurerm_cosmosdb_sql_database" "chronon" {
+  count               = var.cosmos_database != "" ? 0 : 1
   name                = "chronon"
-  resource_group_name = azurerm_resource_group.cosmos_rg.name
-  account_name        = azurerm_cosmosdb_account.zipline_instance.name
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
 
   autoscale_settings {
     max_throughput = var.cosmos_total_throughput_limit
@@ -95,7 +109,7 @@ resource "azurerm_private_endpoint" "cosmos_endpoint" {
 
   private_service_connection {
     name                           = "${var.customer_name}-zipline-cosmos-connection"
-    private_connection_resource_id = azurerm_cosmosdb_account.zipline_instance.id
+    private_connection_resource_id = var.cosmos_account != "" ? data.azurerm_cosmosdb_account.zipline_instance.0.id : azurerm_cosmosdb_account.zipline_instance.0.id
     subresource_names              = ["Sql"]
     is_manual_connection           = false
   }
@@ -109,9 +123,9 @@ resource "azurerm_private_endpoint" "cosmos_endpoint" {
 # Containers - Batch Tables (multi-level partition: /dataset and /keyHash)
 resource "azurerm_cosmosdb_sql_container" "groupby_batch" {
   name                  = "groupby_batch"
-  resource_group_name   = azurerm_resource_group.cosmos_rg.name
-  account_name          = azurerm_cosmosdb_account.zipline_instance.name
-  database_name         = azurerm_cosmosdb_sql_database.chronon.name
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/dataset", "/keyHash"]
   partition_key_kind    = "MultiHash"
   partition_key_version = 2
@@ -121,9 +135,9 @@ resource "azurerm_cosmosdb_sql_container" "groupby_batch" {
 # Containers - Streaming Tables (multi-level partition: /dataset and /keyHashDay)
 resource "azurerm_cosmosdb_sql_container" "groupby_streaming" {
   name                  = "groupby_streaming"
-  resource_group_name   = azurerm_resource_group.cosmos_rg.name
-  account_name          = azurerm_cosmosdb_account.zipline_instance.name
-  database_name         = azurerm_cosmosdb_sql_database.chronon.name
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/dataset", "/keyHashDay"]
   partition_key_kind    = "MultiHash"
   partition_key_version = 2
@@ -133,9 +147,9 @@ resource "azurerm_cosmosdb_sql_container" "groupby_streaming" {
 # Containers - Metadata Tables (single partition: /keyHash)
 resource "azurerm_cosmosdb_sql_container" "chronon_metadata" {
   name                = "chronon_metadata"
-  resource_group_name = azurerm_resource_group.cosmos_rg.name
-  account_name        = azurerm_cosmosdb_account.zipline_instance.name
-  database_name       = azurerm_cosmosdb_sql_database.chronon.name
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths = ["/keyHash"]
   partition_key_version = 2
   default_ttl         = 432000
@@ -143,9 +157,9 @@ resource "azurerm_cosmosdb_sql_container" "chronon_metadata" {
 
 resource "azurerm_cosmosdb_sql_container" "table_partitions" {
   name                = "table_partitions"
-  resource_group_name = azurerm_resource_group.cosmos_rg.name
-  account_name        = azurerm_cosmosdb_account.zipline_instance.name
-  database_name       = azurerm_cosmosdb_sql_database.chronon.name
+  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths = ["/keyHash"]
   partition_key_version = 2
   default_ttl         = 432000
@@ -154,6 +168,6 @@ resource "azurerm_cosmosdb_sql_container" "table_partitions" {
 # Store Cosmos DB key in Key Vault
 resource "azurerm_key_vault_secret" "cosmos_primary_key" {
   name         = "cosmos-primary-key"
-  value        = azurerm_cosmosdb_account.zipline_instance.primary_key
+  value        = var.cosmos_account != "" ? data.azurerm_cosmosdb_account.zipline_instance.0.primary_key : azurerm_cosmosdb_account.zipline_instance.0.primary_key
   key_vault_id = data.azurerm_key_vault.main.id
 }

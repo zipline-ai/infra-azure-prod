@@ -34,6 +34,8 @@ kyuubi:
   port: ""
   credentials:
     enabled: false
+    username_secret: ""
+    password_secret: ""
 
 # Spark History Server configuration
 spark:
