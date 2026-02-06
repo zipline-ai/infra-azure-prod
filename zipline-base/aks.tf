@@ -10,10 +10,10 @@ resource "azurerm_kubernetes_cluster" "hub_cluster" {
   dns_prefix          = "orchestration"
 
   default_node_pool {
-    name           = "default"
-    node_count     = 3
-    vm_size        = "Standard_D8s_v6"
-    vnet_subnet_id = azurerm_subnet.hub_subnet.id
+    name                        = "default"
+    node_count                  = 3
+    vm_size                     = "Standard_D8s_v6"
+    vnet_subnet_id              = azurerm_subnet.hub_subnet.id
     temporary_name_for_rotation = "defaulttmp"
   }
 
@@ -125,22 +125,22 @@ output "aks_cluster_name" {
 }
 
 output "aks_host" {
-  value = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.host
+  value     = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.host
   sensitive = true
 }
 
 output "aks_client_certificate" {
-  value = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.client_certificate
+  value     = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.client_certificate
   sensitive = true
 }
 
 output "aks_client_key" {
-  value = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.client_key
+  value     = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.client_key
   sensitive = true
 }
 
 output "aks_cluster_ca_certificate" {
-  value = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.cluster_ca_certificate
+  value     = azurerm_kubernetes_cluster.hub_cluster.kube_config.0.cluster_ca_certificate
   sensitive = true
 }
 
@@ -157,7 +157,7 @@ output "workload_identity_name" {
 }
 
 output "keyvault_identity_client_id" {
-  value = azurerm_kubernetes_cluster.hub_cluster.key_vault_secrets_provider[0].secret_identity[0].client_id
+  value     = azurerm_kubernetes_cluster.hub_cluster.key_vault_secrets_provider[0].secret_identity[0].client_id
   sensitive = true
 }
 

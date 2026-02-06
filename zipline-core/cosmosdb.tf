@@ -27,8 +27,8 @@ resource "azurerm_resource_group" "cosmos_rg" {
 }
 
 data "azurerm_resource_group" "cosmos_rg" {
-  count    = var.cosmos_rg != "" ? 1 : 0
-  name     = var.cosmos_rg
+  count = var.cosmos_rg != "" ? 1 : 0
+  name  = var.cosmos_rg
 }
 
 resource "azurerm_cosmosdb_account" "zipline_instance" {
@@ -45,9 +45,9 @@ resource "azurerm_cosmosdb_account" "zipline_instance" {
   }
 
   # Availability zone redundancy
-  automatic_failover_enabled       = true
-  multiple_write_locations_enabled = false
-  public_network_access_enabled    = false
+  automatic_failover_enabled            = true
+  multiple_write_locations_enabled      = false
+  public_network_access_enabled         = false
   network_acl_bypass_for_azure_services = false
 
   consistency_policy {
@@ -69,9 +69,9 @@ resource "azurerm_cosmosdb_account" "zipline_instance" {
 }
 
 data "azurerm_cosmosdb_account" "zipline_instance" {
-  count = var.cosmos_account != "" ? 1 : 0
+  count               = var.cosmos_account != "" ? 1 : 0
   resource_group_name = var.cosmos_rg
-  name = var.cosmos_account
+  name                = var.cosmos_account
 }
 
 # SQL Database with autoscale
@@ -123,8 +123,8 @@ resource "azurerm_private_endpoint" "cosmos_endpoint" {
 # Containers - Batch Tables (multi-level partition: /dataset and /keyHash)
 resource "azurerm_cosmosdb_sql_container" "groupby_batch" {
   name                  = "groupby_batch"
-  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
-  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  resource_group_name   = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name          = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/dataset", "/keyHash"]
   partition_key_kind    = "MultiHash"
@@ -135,8 +135,8 @@ resource "azurerm_cosmosdb_sql_container" "groupby_batch" {
 # Containers - Streaming Tables (multi-level partition: /dataset and /keyHashDay)
 resource "azurerm_cosmosdb_sql_container" "groupby_streaming" {
   name                  = "groupby_streaming"
-  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
-  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  resource_group_name   = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name          = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/dataset", "/keyHashDay"]
   partition_key_kind    = "MultiHash"
@@ -146,23 +146,23 @@ resource "azurerm_cosmosdb_sql_container" "groupby_streaming" {
 
 # Containers - Metadata Tables (single partition: /keyHash)
 resource "azurerm_cosmosdb_sql_container" "chronon_metadata" {
-  name                = "chronon_metadata"
-  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
-  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  name                  = "chronon_metadata"
+  resource_group_name   = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name          = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
-  partition_key_paths = ["/keyHash"]
+  partition_key_paths   = ["/keyHash"]
   partition_key_version = 2
-  default_ttl         = 432000
+  default_ttl           = 432000
 }
 
 resource "azurerm_cosmosdb_sql_container" "table_partitions" {
-  name                = "table_partitions"
-  resource_group_name = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
-  account_name        = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  name                  = "table_partitions"
+  resource_group_name   = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name          = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
-  partition_key_paths = ["/keyHash"]
+  partition_key_paths   = ["/keyHash"]
   partition_key_version = 2
-  default_ttl         = 432000
+  default_ttl           = 432000
 }
 
 # Store Cosmos DB key in Key Vault
