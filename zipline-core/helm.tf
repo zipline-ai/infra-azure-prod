@@ -55,9 +55,9 @@ resource "helm_release" "zipline_orchestration" {
       cosmos_table_partitions_dataset     = "TABLE_PARTITIONS"
       cosmos_data_quality_metrics_dataset = "DATA_QUALITY_METRICS"
 
-      kyuubi_host = var.kyuubi_host != "" ? var.kyuubi_host : "${var.customer_name}-zipline-kyuubi.${var.location}.cloudapp.azure.com"
-      kyuubi_port = var.kyuubi_port
-      kyuubi_auth_enabled = var.enable_kyuubi_auth
+      kyuubi_host            = var.kyuubi_host != "" ? var.kyuubi_host : "${var.customer_name}-zipline-kyuubi.${var.location}.cloudapp.azure.com"
+      kyuubi_port            = var.kyuubi_port
+      kyuubi_auth_enabled    = var.enable_kyuubi_auth
       kyuubi_username_secret = var.kyuubi_username_secret
       kyuubi_password_secret = var.kyuubi_password_secret
 
@@ -67,20 +67,20 @@ resource "helm_release" "zipline_orchestration" {
       workload_identity_name      = data.azurerm_user_assigned_identity.workload_identity.name
       image_pull_secret_name      = kubernetes_secret_v1.docker_hub_creds.metadata[0].name
 
-      keyvault_name                  = var.keyvault_name
-      tenant_id                      = data.azurerm_client_config.current.tenant_id
-      keyvault_identity_client_id    = var.keyvault_identity_client_id
+      keyvault_name               = var.keyvault_name
+      tenant_id                   = data.azurerm_client_config.current.tenant_id
+      keyvault_identity_client_id = var.keyvault_identity_client_id
 
       orchestration_hub_static_ip_name = azurerm_public_ip.hub_ingress.name
       orchestration_hub_static_ip      = azurerm_public_ip.hub_ingress.ip_address
       orchestration_ui_static_ip_name  = azurerm_public_ip.ui_ingress.name
       orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
 
-      hub_dns_name = "${var.hub_domain}"
-      ui_dns_name  = "${var.ui_domain}"
+      hub_dns_name       = "${var.hub_domain}"
+      ui_dns_name        = "${var.ui_domain}"
       cert_manager_email = var.admin_email
 
-      node_resource_group              = var.aks_node_resource_group
+      node_resource_group = var.aks_node_resource_group
     })
   ]
 
@@ -114,7 +114,7 @@ resource "kubernetes_secret_v1" "docker_hub_creds" {
         "https://index.docker.io/v1/" = {
           username = "ziplineai"
           password = var.docker_token
-          auth = base64encode("ziplineai:${var.docker_token}")
+          auth     = base64encode("ziplineai:${var.docker_token}")
         }
       }
     })
@@ -153,7 +153,7 @@ locals {
   # Select the final credentials to pass to Helm
   final_client_id     = local.create_auth_app ? azuread_application.zipline_auth[0].client_id : var.oauth_client_id
   final_client_secret = local.create_auth_app ? azuread_application_password.zipline_auth[0].value : var.oauth_client_secret
-  oauth2_config_file = <<-EOT
+  oauth2_config_file  = <<-EOT
     provider = "azure"
     oidc_issuer_url = "https://login.microsoftonline.com/${data.azurerm_client_config.current.tenant_id}/v2.0"
     email_domains = ${jsonencode(var.email_domains)}
@@ -174,8 +174,8 @@ data "azuread_service_principal" "msgraph" {
 }
 
 resource "azuread_application" "zipline_auth" {
-  count        = local.create_auth_app ? 1 : 0
-  display_name = "${var.customer_name}-zipline-auth"
+  count           = local.create_auth_app ? 1 : 0
+  display_name    = "${var.customer_name}-zipline-auth"
   identifier_uris = ["api://${var.customer_name}-zipline-auth"]
   required_resource_access {
     # Microsoft Graph API
@@ -243,7 +243,7 @@ resource "helm_release" "oauth2_proxy" {
         tag = "v7.7.0"
       }
       extraArgs = {
-        "oidc-extra-audience" = "api://${var.customer_name}-zipline-auth"
+        "oidc-extra-audience"    = "api://${var.customer_name}-zipline-auth"
         "skip-jwt-bearer-tokens" = "true"
       }
       config = {
@@ -253,7 +253,7 @@ resource "helm_release" "oauth2_proxy" {
         cookieSecret = random_password.oauth2_cookie_secret.result
 
         # Dynamic Config File based on Provider
-        configFile   = local.oauth2_config_file
+        configFile = local.oauth2_config_file
       }
       ingress = { enabled = false }
     })
@@ -263,12 +263,12 @@ resource "helm_release" "oauth2_proxy" {
 }
 
 resource "kubernetes_ingress_v1" "oauth2_hub" {
-  count      = var.enable_oauth ? 1 : 0
+  count = var.enable_oauth ? 1 : 0
   metadata {
     name      = "oauth2-proxy-hub"
     namespace = "zipline-system"
     annotations = {
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+      "cert-manager.io/cluster-issuer"                = "letsencrypt-prod"
       "nginx.ingress.kubernetes.io/proxy-buffer-size" = "32k"
     }
   }
@@ -278,7 +278,7 @@ resource "kubernetes_ingress_v1" "oauth2_hub" {
       host = var.hub_domain
       http {
         path {
-          path = "/oauth2"
+          path      = "/oauth2"
           path_type = "Prefix"
           backend {
             service {
@@ -303,7 +303,7 @@ resource "kubernetes_ingress_v1" "oauth2_ui" {
     name      = "oauth2-proxy-ui"
     namespace = "zipline-system"
     annotations = {
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+      "cert-manager.io/cluster-issuer"                = "letsencrypt-prod"
       "nginx.ingress.kubernetes.io/proxy-buffer-size" = "32k"
     }
   }
@@ -313,7 +313,7 @@ resource "kubernetes_ingress_v1" "oauth2_ui" {
       host = var.ui_domain
       http {
         path {
-          path = "/oauth2"
+          path      = "/oauth2"
           path_type = "Prefix"
           backend {
             service {
@@ -379,7 +379,7 @@ EOT
 
 # Kyuubi namespace (deployed to kyuubi cluster)
 resource "kubernetes_namespace_v1" "kyuubi" {
-  count = var.kyuubi_host == "" ? 1 : 0
+  count    = var.kyuubi_host == "" ? 1 : 0
   provider = kubernetes.kyuubi
 
   metadata {
@@ -389,7 +389,7 @@ resource "kubernetes_namespace_v1" "kyuubi" {
 
 # Deploy Kyuubi using Helm (to kyuubi cluster)
 resource "helm_release" "kyuubi" {
-  count = var.kyuubi_host == "" ? 1 : 0
+  count    = var.kyuubi_host == "" ? 1 : 0
   provider = helm.kyuubi
 
   name             = "kyuubi"
