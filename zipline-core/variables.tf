@@ -8,7 +8,7 @@ variable "zipline_version" {
 }
 variable "docker_token" {
   description = "A token for pulling the private images from Docker. Someone from Zipline should provide this to you"
-  sensitive = true
+  sensitive   = true
 }
 variable "location" {
   description = "The Azure location to deploy to"
@@ -26,7 +26,7 @@ variable "azure_storage_account_name" {
 
 variable "azure_storage_account_key" {
   description = "The Azure storage account key to use"
-  sensitive = true
+  sensitive   = true
 }
 
 variable "storage_account_resource_group" {
@@ -54,20 +54,20 @@ variable "cosmos_zone_redundant" {
 
 variable "cosmos_rg" {
   description = "Optional: Cosmos DB resource group if you already have one setup"
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 variable "cosmos_account" {
   description = "Optional: Cosmos DB account name if you already have one setup"
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 variable "cosmos_database" {
   description = "Optional: Cosmos DB database name if you already have one setup"
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 # AKS Configuration
@@ -87,17 +87,17 @@ variable "aks_host" {
 
 variable "aks_client_certificate" {
   description = "The client certificate for the aks cluster"
-  sensitive = true
+  sensitive   = true
 }
 
 variable "aks_client_key" {
   description = "The client key for the aks cluster"
-  sensitive = true
+  sensitive   = true
 }
 
 variable "aks_cluster_ca_certificate" {
   description = "The cluster CA certificate for the aks cluster"
-  sensitive = true
+  sensitive   = true
 }
 
 variable "aks_node_resource_group" {
@@ -108,7 +108,7 @@ variable "aks_node_resource_group" {
 
 variable "postgres_db_name" {
   description = "The name of the postgres database"
-  default = "execution_info"
+  default     = "execution_info"
 }
 
 variable "postgres_fqdn" {
@@ -148,23 +148,23 @@ variable "kyuubi_host" {
 
 variable "kyuubi_port" {
   description = "The port of the kyuubi cluster"
-  default = 10099
+  default     = 10099
 }
 
 variable "enable_kyuubi_auth" {
   description = "Whether to enable kyuubi authentication. If enabled, kyuubi_username_secret and kyuubi_password_secret must be set in the provided keyvault"
-  default = false
+  default     = false
 }
 
 variable "kyuubi_username_secret" {
   description = "The name of the secret in the keyvault holding the kyuubi username"
-  default = ""
+  default     = ""
 }
 
 
 variable "kyuubi_password_secret" {
   description = "The name of the secret in the keyvault holding the kyuubi password"
-  default = ""
+  default     = ""
 }
 
 
@@ -191,7 +191,7 @@ variable "admin_email" {
 
 variable "enable_oauth" {
   description = "Whether to use oauth to authenticate access to the Zipline Hub"
-  default = true
+  default     = true
 }
 
 variable "oauth_client_id" {
@@ -216,30 +216,30 @@ variable "email_domains" {
 # Kyuubi cluster configuration. These are only needed if kyuubi host is left empty
 variable "kyuubi_aks_host" {
   description = "The host of the aks cluster for kyuubi"
-  default = ""
+  default     = ""
 }
 
 variable "kyuubi_aks_client_certificate" {
   description = "The client certificate for the aks cluster for kyuubi"
-  default = ""
-  sensitive = true
+  default     = ""
+  sensitive   = true
 }
 
 variable "kyuubi_aks_client_key" {
   description = "The client key for the aks cluster for kyuubi"
-  default = ""
-  sensitive = true
+  default     = ""
+  sensitive   = true
 }
 
 variable "kyuubi_aks_cluster_ca_certificate" {
   description = "The cluster CA certificate for the aks cluster for kyuubi"
-  default = ""
-  sensitive = true
+  default     = ""
+  sensitive   = true
 }
 
 variable "kyuubi_workload_identity_client_id" {
   description = "The workload identity client id for kyuubi"
-  default = ""
+  default     = ""
 }
 
 # Logs Analytics Configuration
