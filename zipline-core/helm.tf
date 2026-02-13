@@ -47,6 +47,7 @@ resource "helm_release" "zipline_orchestration" {
 
       azure_storage_account_name = var.azure_storage_account_name
       azure_storage_account_key  = var.azure_storage_account_key
+      warehouse_container_name   = var.warehouse_container_name
 
       orchestration_db_fqdn     = var.postgres_fqdn
       orchestration_db_database = var.postgres_db_name
