@@ -90,6 +90,7 @@ azure:
   location: "${azure_location}"
   storage_account_name: "${azure_storage_account_name}"
   storage_account_key: "${azure_storage_account_key}"
+  warehouse_container_name: "${warehouse_container_name}"
   log_analytics_workspace_id: "${log_analytics_workspace_id}"
   prometheus_query_endpoint: "${prometheus_query_endpoint}"
   prometheus_namespace: "${prometheus_namespace}"
