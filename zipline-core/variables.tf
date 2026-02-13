@@ -33,6 +33,11 @@ variable "storage_account_resource_group" {
   description = "The resource group where the storage account is setup"
 }
 
+variable "warehouse_container_name" {
+  description = "The name of the Azure storage container for storing file"
+  default     = "warehouse"
+}
+
 # Cosmos DB Configuration
 
 variable "cosmos_total_throughput_limit" {
