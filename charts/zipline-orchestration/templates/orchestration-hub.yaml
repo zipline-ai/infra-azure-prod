@@ -127,4 +127,8 @@ spec:
       port: 80
       targetPort: {{ .Values.orchestration.hub.port }}
       protocol: TCP
+    - name: metrics
+      port: 8905
+      targetPort: 8905
+      protocol: TCP
   type: ClusterIP
