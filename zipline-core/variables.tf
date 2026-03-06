@@ -212,6 +212,21 @@ variable "oauth_client_secret" {
   sensitive   = true
 }
 
+variable "oauth_scope" {
+  description = "Optional: Existing OAuth2 Scope. Required if oauth_client_id is set. Do not include the suffix '/.default' here."
+  type        = string
+  default     = ""
+}
+
+# If you set enable_oauth = true while leaving oauth_client_id and oauth_client_secret blank, an AD Application will be
+# created and used to restrict users. In this case set oauth_user_group to the Azure group you would like to allow
+# access.
+variable "oauth_users_group" {
+  description = "Optional: Will grant access to this group to the zipline service. Use the display name"
+  type        = string
+  default     = ""
+}
+
 variable "email_domains" {
   description = "List of allowed email domains for OAuth2 Proxy. Use ['*'] to allow any domain."
   type        = list(string)
