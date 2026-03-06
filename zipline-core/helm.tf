@@ -172,11 +172,11 @@ resource "random_password" "oauth2_cookie_secret" {
 resource "random_uuid" "auth_scope_id" {}
 
 data "azuread_service_principal" "msgraph" {
-  client_id = "00000003-0000-0000-c000-000000000000"
+  display_name = "Microsoft Graph"
 }
 
 data "azuread_service_principal" "azure_cli" {
-  client_id = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"
+  display_name = "Microsoft Azure CLI"
 }
 
 resource "azuread_application" "zipline_auth" {
