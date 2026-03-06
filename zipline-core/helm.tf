@@ -157,12 +157,13 @@ locals {
   oauth2_config_file  = <<-EOT
     provider = "azure"
     oidc_issuer_url = "https://login.microsoftonline.com/${data.azurerm_client_config.current.tenant_id}/v2.0"
+    extra_jwt_issuers = [ "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/=${var.oauth_scope}" ]
     email_domains = ${jsonencode(var.email_domains)}
     upstreams = [ "file:///dev/null" ]
   EOT
 }
 
-# 1. Generate a random cookie secret for OAuth2 Proxy
+# Generate a random cookie secret for OAuth2 Proxy
 resource "random_password" "oauth2_cookie_secret" {
   length  = 32
   special = true
@@ -171,13 +172,18 @@ resource "random_password" "oauth2_cookie_secret" {
 resource "random_uuid" "auth_scope_id" {}
 
 data "azuread_service_principal" "msgraph" {
-  client_id = "00000003-0000-0000-c000-000000000000"
+  display_name = "Microsoft Graph"
+}
+
+data "azuread_service_principal" "azure_cli" {
+  display_name = "Microsoft Azure CLI"
 }
 
 resource "azuread_application" "zipline_auth" {
   count           = local.create_auth_app ? 1 : 0
   display_name    = "${var.customer_name}-zipline-auth"
   identifier_uris = ["api://${var.customer_name}-zipline-auth"]
+
   required_resource_access {
     # Microsoft Graph API
     resource_app_id = "00000003-0000-0000-c000-000000000000"
@@ -211,9 +217,24 @@ resource "azuread_application" "zipline_auth" {
   }
 }
 
+resource "random_uuid" "zipline_access_role" {}
+
 resource "azuread_service_principal" "zipline_auth" {
-  count     = local.create_auth_app ? 1 : 0
-  client_id = azuread_application.zipline_auth[0].client_id
+  count                        = local.create_auth_app ? 1 : 0
+  client_id                    = azuread_application.zipline_auth[0].client_id
+  app_role_assignment_required = true
+}
+
+data "azuread_group" "zipline_users" {
+  count        = local.create_auth_app && var.oauth_users_group != "" ? 1 : 0
+  display_name = var.oauth_users_group
+}
+
+resource "azuread_app_role_assignment" "zipline_group_access" {
+  count               = local.create_auth_app && var.oauth_users_group != "" ? 1 : 0
+  app_role_id         = random_uuid.zipline_access_role.result
+  principal_object_id = data.azuread_group.zipline_users[0].object_id
+  resource_object_id  = azuread_service_principal.zipline_auth[0].object_id
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "zipline_auth_graph_grant" {
@@ -224,12 +245,22 @@ resource "azuread_service_principal_delegated_permission_grant" "zipline_auth_gr
   claim_values                         = ["User.Read"] # This must match the scope requested in required_resource_access
 }
 
+resource "azuread_service_principal_delegated_permission_grant" "azure_cli_zipline_auth_grant" {
+  count = local.create_auth_app ? 1 : 0
+
+  service_principal_object_id          = data.azuread_service_principal.azure_cli.object_id
+  resource_service_principal_object_id = azuread_service_principal.zipline_auth[0].object_id
+  claim_values                         = ["user_impersonation"]
+}
+
 resource "azuread_application_password" "zipline_auth" {
   count          = local.create_auth_app ? 1 : 0
   application_id = azuread_application.zipline_auth[0].id
 }
 
-# 3. Deploy OAuth2 Proxy via Helm
+# ==================================================================
+# Deploy OAuth2 Proxy via Helm
+# ==================================================================
 resource "helm_release" "oauth2_proxy" {
   count      = var.enable_oauth ? 1 : 0
   name       = "oauth2-proxy"
@@ -244,7 +275,7 @@ resource "helm_release" "oauth2_proxy" {
         tag = "v7.7.0"
       }
       extraArgs = {
-        "oidc-extra-audience"    = "api://${var.customer_name}-zipline-auth"
+        "oidc-extra-audience"    = local.create_auth_app ? "api://${var.customer_name}-zipline-auth" : var.oauth_scope
         "skip-jwt-bearer-tokens" = "true"
       }
       config = {
