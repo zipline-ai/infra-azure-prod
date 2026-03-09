@@ -23,6 +23,23 @@ ingress-nginx-ui:
         service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
     electionID: ingress-controller-leader-ui
 
+# Ingress NGINX Controller for Eval
+ingress-nginx-eval:
+  enabled: true
+  controller:
+    ingressClassResource:
+      name: nginx-eval
+      enabled: true
+      default: false
+      controllerValue: "k8s.io/ingress-nginx-eval"
+    ingressClass: nginx-eval
+    service:
+      loadBalancerIP: "${orchestration_eval_static_ip}"
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-resource-group: "${node_resource_group}"
+        service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
+    electionID: ingress-controller-leader-eval
+
 # Ingress NGINX Controller for Hub
 ingress-nginx-hub:
   enabled: true
@@ -63,6 +80,11 @@ ingress:
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
       nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
 %{ endif ~}
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  eval:
+    className: nginx-eval
+    host: "${eval_dns_name}"
+    annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
 database:
@@ -109,3 +131,5 @@ staticIPs:
   orchestrationUIName: "${orchestration_ui_static_ip_name}"
   orchestrationHub: "${orchestration_hub_static_ip}"
   orchestrationHubName: "${orchestration_hub_static_ip_name}"
+  orchestrationEval: "${orchestration_eval_static_ip}"
+  orchestrationEvalName: "${orchestration_eval_static_ip_name}"
