@@ -72,13 +72,16 @@ resource "helm_release" "zipline_orchestration" {
       tenant_id                   = data.azurerm_client_config.current.tenant_id
       keyvault_identity_client_id = var.keyvault_identity_client_id
 
-      orchestration_hub_static_ip_name = azurerm_public_ip.hub_ingress.name
-      orchestration_hub_static_ip      = azurerm_public_ip.hub_ingress.ip_address
-      orchestration_ui_static_ip_name  = azurerm_public_ip.ui_ingress.name
-      orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
+      orchestration_hub_static_ip_name  = azurerm_public_ip.hub_ingress.name
+      orchestration_hub_static_ip       = azurerm_public_ip.hub_ingress.ip_address
+      orchestration_ui_static_ip_name   = azurerm_public_ip.ui_ingress.name
+      orchestration_ui_static_ip        = azurerm_public_ip.ui_ingress.ip_address
+      orchestration_eval_static_ip_name = azurerm_public_ip.eval_ingress.name
+      orchestration_eval_static_ip      = azurerm_public_ip.eval_ingress.ip_address
 
       hub_dns_name       = "${var.hub_domain}"
       ui_dns_name        = "${var.ui_domain}"
+      eval_dns_name      = "${var.eval_domain}"
       cert_manager_email = var.admin_email
 
       node_resource_group = var.aks_node_resource_group
@@ -136,6 +139,14 @@ resource "azurerm_public_ip" "hub_ingress" {
 
 resource "azurerm_public_ip" "ui_ingress" {
   name                = "${var.customer_name}-zipline-ui-pip"
+  resource_group_name = var.aks_node_resource_group
+  location            = var.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_public_ip" "eval_ingress" {
+  name                = "${var.customer_name}-zipline-eval-pip"
   resource_group_name = var.aks_node_resource_group
   location            = var.location
   allocation_method   = "Static"
@@ -378,6 +389,10 @@ output "ui_address" {
   value = azurerm_public_ip.ui_ingress.ip_address
 }
 
+output "eval_address" {
+  value = azurerm_public_ip.eval_ingress.ip_address
+}
+
 output "dns_setup_instructions" {
   description = "Instructions for configuring DNS records"
   value       = <<EOT
@@ -397,6 +412,11 @@ RECORD 2 (UI):
   - Host/Name:  ${var.ui_domain}
   - Type:       A
   - Value:      ${azurerm_public_ip.ui_ingress.ip_address}
+
+RECORD 3 (Eval):
+  - Host/Name:  ${var.eval_domain}
+  - Type:       A
+  - Value:      ${azurerm_public_ip.eval_ingress.ip_address}
 
 --------------------------------------------------------------------------------
 Once configured, please allow a few minutes for DNS propagation.
