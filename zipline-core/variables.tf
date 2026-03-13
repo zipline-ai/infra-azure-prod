@@ -187,9 +187,6 @@ variable "ui_domain" {
   description = "The domain to use for initializing the Zipline UI. This should be a domain you can set DNS records for."
 }
 
-variable "eval_domain" {
-  description = "The domain to use for the Zipline Eval service. This should be a domain you can set DNS records for."
-}
 
 variable "admin_email" {
   description = "Email for receiving certificate updates"
