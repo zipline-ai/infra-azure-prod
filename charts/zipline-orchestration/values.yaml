@@ -53,8 +53,6 @@ staticIPs:
   orchestrationUIName: ""
   orchestrationHub: ""
   orchestrationHubName: ""
-  orchestrationEval: ""
-  orchestrationEvalName: ""
 
 
 # Orchestration services configuration
@@ -110,23 +108,6 @@ ingress-nginx-ui:
     # Use a specific namespace or use different suffixes
     namespaceOverride: ingress-nginx-ui
 
-# Ingress NGINX for Eval
-ingress-nginx-eval:
-  enabled: true
-  controller:
-    ingressClassResource:
-      name: nginx-eval
-      enabled: true
-      default: false
-      controllerValue: "k8s.io/ingress-nginx-eval"
-    ingressClass: nginx-eval
-    service:
-      loadBalancerIP: ""  # Set by Terraform
-      annotations:
-        service.beta.kubernetes.io/azure-load-balancer-resource-group: ""  # Set by Terraform
-    electionID: ingress-controller-leader-eval
-    namespaceOverride: ingress-nginx-eval
-
 # Ingress NGINX for Hub
 ingress-nginx-hub:
   enabled: true
@@ -164,12 +145,6 @@ ingress:
       nginx.ingress.kubernetes.io/health-check-path: "/ping"
       nginx.ingress.kubernetes.io/proxy-body-size: "20m"
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  eval:
-    className: nginx-eval
-    host: ""
-    annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
-
 database:
   orchestration:
     fqdn: ""
