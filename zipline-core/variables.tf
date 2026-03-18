@@ -269,3 +269,18 @@ variable "kyuubi_workload_identity_client_id" {
 variable "log_analytics_workspace_workspace_id" {
   description = "The workspace id for the log analytics workspace to save logs"
 }
+
+variable "loki_endpoint" {
+  description = "If you need to route logs through a different service, provide the loki endpoint for querying logs"
+  default     = ""
+}
+
+variable "prometheus_endpoint" {
+  description = "If you need to route metrics through a different service, provide the prometheus endpoint for querying metrics"
+  default = ""
+}
+
+variable "grafana_endpoint" {
+  description = "If you need to route metrics through a different service, provide the grafana endpoint for generating links to metrics"
+  default     = ""
+}

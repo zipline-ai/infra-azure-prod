@@ -114,6 +114,7 @@ azure:
   storage_account_key: "${azure_storage_account_key}"
   warehouse_container_name: "${warehouse_container_name}"
   log_analytics_workspace_id: "${log_analytics_workspace_id}"
+  loki_endpoint: "${loki_endpoint}"
   prometheus_query_endpoint: "${prometheus_query_endpoint}"
   prometheus_namespace: "${prometheus_namespace}"
   grafana_endpoint: "${grafana_endpoint}"
