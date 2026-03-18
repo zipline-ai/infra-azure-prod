@@ -16,6 +16,7 @@ azure:
   storage_account_key: ""
   warehouse_container_name: ""
   log_analytics_workspace_id: ""
+  loki_endpoint: ""
   prometheus_query_endpoint: ""
   prometheus_namespace: ""
   grafana_endpoint: ""
