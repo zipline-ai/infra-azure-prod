@@ -41,9 +41,10 @@ resource "helm_release" "zipline_orchestration" {
       enable_oauth    = var.enable_oauth
 
       log_analytics_workspace_id = var.log_analytics_workspace_workspace_id
-      prometheus_query_endpoint  = azurerm_monitor_workspace.aks.query_endpoint
+      loki_endpoint              = var.loki_endpoint
+      prometheus_query_endpoint  = var.prometheus_endpoint != "" ? var.prometheus_endpoint : azurerm_monitor_workspace.aks.query_endpoint
       prometheus_namespace       = kubernetes_namespace_v1.zipline_system.id
-      grafana_endpoint           = azurerm_dashboard_grafana.aks.endpoint
+      grafana_endpoint           = var.grafana_endpoint != "" ? var.grafana_endpoint : azurerm_dashboard_grafana.aks.endpoint
 
       azure_storage_account_name = var.azure_storage_account_name
       azure_storage_account_key  = var.azure_storage_account_key
