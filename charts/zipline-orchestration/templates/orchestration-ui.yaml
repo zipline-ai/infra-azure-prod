@@ -52,6 +52,8 @@ spec:
               value: "{{ .Values.azure.prometheus_query_endpoint }}"
             - name: PROMETHEUS_NAMESPACE
               value: "{{ .Values.azure.prometheus_namespace }}"
+            - name: LOKI_URL
+              value: "{{ .Values.azure.loki_endpoint }}"
             - name: AZURE_CUSTOMER_ID
               value: "{{ .Values.global.customer_name }}"
           volumeMounts:
