@@ -86,6 +86,24 @@ resource "helm_release" "zipline_orchestration" {
       cert_manager_email = var.admin_email
 
       node_resource_group = var.aks_node_resource_group
+
+      enable_oauth         = var.enable_oauth
+      zipline_auth_enabled = var.zipline_auth_enabled
+      zipline_auth_url     = var.ui_domain != "" ? "https://${var.ui_domain}" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"
+      zipline_auth_secret  = random_password.zipline_auth.result
+      zipline_auth_jwksUrl = "https://${var.ui_domain != "" ? var.ui_domain : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"}/api/auth/jwks"
+      google_oauth_client_id = var.google_oauth_client_id
+      google_oauth_client_secret = var.google_oauth_client_secret
+      github_oauth_client_id = var.github_oauth_client_id
+      github_oauth_client_secret = var.github_oauth_client_secret
+      microsoft_entra_tenant_id = var.microsoft_entra_tenant_id
+      microsoft_entra_oauth_client_id = var.microsoft_entra_oauth_client_id
+      microsoft_entra_oauth_client_secret = var.microsoft_entra_oauth_client_secret
+      sso_provider_id = var.sso_provider_id
+      sso_domain = var.sso_domain
+      sso_issuer = var.sso_issuer
+      sso_client_id = var.sso_client_id
+      sso_client_secret = var.sso_client_secret
     })
   ]
 
@@ -126,6 +144,20 @@ resource "kubernetes_secret_v1" "docker_hub_creds" {
   }
 
   depends_on = [kubernetes_namespace_v1.zipline_system]
+}
+
+resource "random_password" "zipline_auth" {
+  length           = 32
+  special          = true
+  override_special = "!@#$%^&*"
+  min_special      = 1
+  # The resulting password will be stored in the state file.
+}
+
+resource "azurerm_key_vault_secret" "zipline_auth" {
+  name = "zipline-${var.customer_name}-auth-secret"
+  key_vault_id = data.azurerm_key_vault.main.id
+  value = random_password.zipline_auth.result
 }
 
 #############################################################
