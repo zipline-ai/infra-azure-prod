@@ -81,15 +81,15 @@ orchestration:
 
   fetcher:
     image: "ziplineai/chronon-fetcher"
-    replicas: 1
+    replicas: 3
     port: 9000
     resources:
       limits:
         cpu: "4"
-        memory: "8Gi"
+        memory: "16Gi"
       requests:
-        cpu: "1"
-        memory: "2Gi"
+        cpu: "4"
+        memory: "16Gi"
 
   eval:
     image: "ziplineai/eval-azure"
