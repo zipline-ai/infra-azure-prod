@@ -1,0 +1,31 @@
+{{ if .Values.global.deploy_fetcher }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orchestration-ui-fetcher-ingress
+  namespace: zipline-system
+  labels:
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    {{- with .Values.ingress.ui.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.ui.className }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.ui.host }}
+      secretName: ui-tls-secret
+  rules:
+    - host: {{ .Values.ingress.ui.host }}
+      http:
+        paths:
+          - path: /services/fetcher(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: fetcher-service
+                port:
+                  number: 80
+  {{ end }}

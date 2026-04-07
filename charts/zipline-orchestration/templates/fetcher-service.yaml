@@ -1,0 +1,98 @@
+{{ if .Values.global.deploy_fetcher }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipline-fetcher
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: fetcher
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.orchestration.fetcher.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: fetcher
+  template:
+    metadata:
+      labels:
+        app: fetcher
+    spec:
+      serviceAccountName: orchestration-sa
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: fetcher
+          image: "{{ .Values.orchestration.fetcher.image }}:{{ .Values.global.version }}"
+          imagePullPolicy: Always
+          env:
+            - name: PROVIDER
+              value: "AZURE"
+            - name: FETCHER_PORT
+              value: "{{ .Values.orchestration.fetcher.port }}"
+            - name: COSMOS_ENDPOINT
+              value: "https://zipline-{{ .Values.global.customer_name | lower }}-instance.documents.azure.com:443/"
+            - name: COSMOS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cosmos-credentials
+                  key: primary-key
+            - name: CHRONON_METRICS_READER
+              value: "prometheus"
+            - name: CHRONON_PROMETHEUS_SERVER_PORT
+              value: "8888"
+            - name: VERTX_PROMETHEUS_SERVER_PORT
+              value: "8889"
+          volumeMounts:
+            - name: cosmos-secrets-store
+              mountPath: "/mnt/cosmos-secrets"
+              readOnly: true
+          ports:
+            - containerPort: {{ .Values.orchestration.fetcher.port }}
+            - name: chronon-prom
+              containerPort: 8888
+            - name: vertx-prom
+              containerPort: 8889
+          resources:
+          {{- toYaml .Values.orchestration.fetcher.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.orchestration.fetcher.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.orchestration.fetcher.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: cosmos-secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "cosmos-secret-provider"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fetcher-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "zipline-orchestration.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: fetcher
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.orchestration.fetcher.port }}
+      protocol: TCP
+  type: ClusterIP
+  {{ end }}
