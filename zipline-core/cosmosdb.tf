@@ -152,7 +152,6 @@ resource "azurerm_cosmosdb_sql_container" "chronon_metadata" {
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/keyHash"]
   partition_key_version = 2
-  default_ttl           = 432000
 }
 
 resource "azurerm_cosmosdb_sql_container" "table_partitions" {
@@ -162,7 +161,6 @@ resource "azurerm_cosmosdb_sql_container" "table_partitions" {
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/keyHash"]
   partition_key_version = 2
-  default_ttl           = 432000
 }
 
 # Store Cosmos DB key in Key Vault
