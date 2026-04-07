@@ -86,6 +86,8 @@ resource "helm_release" "zipline_orchestration" {
       cert_manager_email = var.admin_email
 
       node_resource_group = var.aks_node_resource_group
+
+      deploy_fetcher = var.deploy_fetcher
     })
   ]
 
