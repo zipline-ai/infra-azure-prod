@@ -47,8 +47,8 @@ spec:
             - name: VERTX_PROMETHEUS_SERVER_PORT
               value: "8889"
           volumeMounts:
-            - name: cosmos-secrets-store
-              mountPath: "/mnt/cosmos-secrets"
+            - name: zipline-secrets-store
+              mountPath: "/mnt/zipline-secrets"
               readOnly: true
           ports:
             - containerPort: {{ .Values.orchestration.fetcher.port }}
@@ -71,12 +71,12 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
-        - name: cosmos-secrets-store
+        - name: zipline-secrets-store
           csi:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: "cosmos-secret-provider"
+              secretProviderClass: "zipline-secret-provider"
 
 ---
 apiVersion: v1
