@@ -302,6 +302,7 @@ variable "google_oauth_client_secret" {
   type        = string
   description = "Optional for use google oauth with zipline authentication"
   default     = ""
+  sensitive   = true
 }
 
 variable "github_oauth_client_id" {
@@ -314,6 +315,7 @@ variable "github_oauth_client_secret" {
   type        = string
   description = "Optional for use github oauth with zipline authentication"
   default     = ""
+  sensitive   = true
 }
 
 variable "microsoft_entra_tenant_id" {
@@ -333,6 +335,7 @@ variable "microsoft_entra_oauth_client_secret" {
   type        = string
   description = "Optional for use microsoft Entra ID with zipline authentication"
   default     = ""
+  sensitive   = true
 }
 
 variable "sso_provider_id" {
@@ -363,4 +366,5 @@ variable "sso_client_secret" {
   type        = string
   description = "Optional for use SSO with zipline authentication"
   default     = ""
+  sensitive   = true
 }
