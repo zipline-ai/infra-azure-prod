@@ -20,7 +20,7 @@ variable "subscription_id" {
 
 variable "deploy_fetcher" {
   description = "Whether or not to deploy the fetcher service"
-  default = false
+  default     = false
 }
 
 # Azure Storage Configuration
@@ -282,7 +282,7 @@ variable "loki_endpoint" {
 
 variable "prometheus_endpoint" {
   description = "If you need to route metrics through a different service, provide the prometheus endpoint for querying metrics"
-  default = ""
+  default     = ""
 }
 
 variable "grafana_endpoint" {
