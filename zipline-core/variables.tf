@@ -18,6 +18,11 @@ variable "subscription_id" {
   description = "The Azure subscription to use"
 }
 
+variable "deploy_fetcher" {
+  description = "Whether or not to deploy the fetcher service"
+  default = false
+}
+
 # Azure Storage Configuration
 
 variable "azure_storage_account_name" {
