@@ -66,7 +66,6 @@ spec:
                 secretKeyRef:
                   name: auth-secret
                   key: auth-secret
-              value: "{{ .Values.auth.secret }}"
             - name: GOOGLE_OAUTH_CLIENT_ID
               value: "{{ .Values.auth.google_oauth_client_id }}"
             - name: GOOGLE_OAUTH_CLIENT_SECRET
