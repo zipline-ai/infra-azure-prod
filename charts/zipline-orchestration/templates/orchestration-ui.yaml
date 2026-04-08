@@ -60,6 +60,53 @@ spec:
             - name: FETCHER_BASE_URL
               value: "http://fetcher-service"
             {{- end }}
+            - name: AUTH_ENABLED
+              value: "{{ .Values.auth.enabled }}"
+            {{- if .Values.auth.enabled }}
+            - name: AUTH_URL
+              value: "{{ .Values.auth.url }}"
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: auth-secret
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              value: "{{ .Values.auth.google_oauth_client_id }}"
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: google-oauth-client-secret
+            - name: GITHUB_OAUTH_CLIENT_ID
+              value: "{{ .Values.auth.github_oauth_client_id }}"
+            - name: GITHUB_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: github-oauth-client-secret
+            - name: MICROSOFT_ENTRA_TENANT_ID
+              value: "{{ .Values.auth.microsoft_entra_tenant_id }}"
+            - name: MICROSOFT_ENTRA_OAUTH_CLIENT_ID
+              value: "{{ .Values.auth.microsoft_entra_oauth_client_id }}"
+            - name: MICROSOFT_ENTRA_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: microsoft-entra-oauth-client-secret
+            - name: SSO_PROVIDER_ID
+              value: "{{ .Values.auth.sso_provider_id }}"
+            - name: SSO_DOMAIN
+              value: "{{ .Values.auth.sso_domain }}"
+            - name: SSO_ISSUER
+              value: "{{ .Values.auth.sso_issuer }}"
+            - name: SSO_CLIENT_ID
+              value: "{{ .Values.auth.sso_client_id }}"
+            - name: SSO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: sso-client-secret
+            {{- end }}
           volumeMounts:
             - name: secrets-store-inline
               mountPath: "/mnt/secrets-store"

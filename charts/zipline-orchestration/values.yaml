@@ -166,15 +166,11 @@ ingress:
     className: nginx-ui
     host: ""
     annotations:
-      nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-      nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hub:
     className: nginx-hub
     host: ""
     annotations:
-      nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
-      nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
       nginx.ingress.kubernetes.io/health-check-path: "/ping"
       nginx.ingress.kubernetes.io/proxy-body-size: "20m"
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -202,3 +198,18 @@ clusterIssuer:
 
 imagePullSecrets:
   - name: my-registry-key
+
+# Zipline Authentication Configuration
+auth:
+  enabled: false
+  url: ""
+  secret: ""
+  jwksUrl: ""
+  google_oauth_client_id: ""
+  github_oauth_client_id: ""
+  microsoft_entra_tenant_id: ""
+  microsoft_entra_oauth_client_id: ""
+  sso_provider_id: ""
+  sso_domain: ""
+  sso_issuer: ""
+  sso_client_id: ""

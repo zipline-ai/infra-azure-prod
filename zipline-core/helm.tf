@@ -88,6 +88,18 @@ resource "helm_release" "zipline_orchestration" {
       node_resource_group = var.aks_node_resource_group
 
       deploy_fetcher = var.deploy_fetcher
+
+      zipline_auth_enabled            = var.zipline_auth_enabled
+      zipline_auth_url                = var.ui_domain != "" ? "https://${var.ui_domain}" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"
+      zipline_auth_jwksUrl            = var.ui_domain != "" ? "https://${var.ui_domain}/api/auth/jwks" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000/api/auth/jwks"
+      google_oauth_client_id          = var.google_oauth_client_id
+      github_oauth_client_id          = var.github_oauth_client_id
+      microsoft_entra_tenant_id       = var.microsoft_entra_tenant_id
+      microsoft_entra_oauth_client_id = var.microsoft_entra_oauth_client_id
+      sso_provider_id                 = var.sso_provider_id
+      sso_domain                      = var.sso_domain
+      sso_issuer                      = var.sso_issuer
+      sso_client_id                   = var.sso_client_id
     })
   ]
 
@@ -128,6 +140,50 @@ resource "kubernetes_secret_v1" "docker_hub_creds" {
   }
 
   depends_on = [kubernetes_namespace_v1.zipline_system]
+}
+
+resource "random_password" "zipline_auth" {
+  count            = var.zipline_auth_enabled ? 1 : 0
+  length           = 32
+  special          = true
+  override_special = "!@#$%^&*"
+  min_special      = 1
+  # The resulting password will be stored in the state file.
+}
+
+resource "azurerm_key_vault_secret" "auth_secret" {
+  count        = var.zipline_auth_enabled ? 1 : 0
+  name         = "auth-secret"
+  value        = random_password.zipline_auth[0].result
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "google_oauth_client_secret" {
+  count        = var.zipline_auth_enabled ? 1 : 0
+  name         = "google-oauth-client-secret"
+  value        = var.google_oauth_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "github_oauth_client_secret" {
+  count        = var.zipline_auth_enabled ? 1 : 0
+  name         = "github-oauth-client-secret"
+  value        = var.github_oauth_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "microsoft_entra_oauth_client_secret" {
+  count        = var.zipline_auth_enabled ? 1 : 0
+  name         = "microsoft-entra-oauth-client-secret"
+  value        = var.microsoft_entra_oauth_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "sso_client_secret" {
+  count        = var.zipline_auth_enabled ? 1 : 0
+  name         = "sso-client-secret"
+  value        = var.sso_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
 }
 
 #############################################################

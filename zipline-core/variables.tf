@@ -20,7 +20,7 @@ variable "subscription_id" {
 
 variable "deploy_fetcher" {
   description = "Whether or not to deploy the fetcher service"
-  default = false
+  default     = false
 }
 
 # Azure Storage Configuration
@@ -282,10 +282,94 @@ variable "loki_endpoint" {
 
 variable "prometheus_endpoint" {
   description = "If you need to route metrics through a different service, provide the prometheus endpoint for querying metrics"
-  default = ""
+  default     = ""
 }
 
 variable "grafana_endpoint" {
   description = "If you need to route metrics through a different service, provide the grafana endpoint for generating links to metrics"
   default     = ""
+}
+
+# Zipline Authentication
+variable "zipline_auth_enabled" {
+  type        = bool
+  description = "Enable Zipline authentication"
+  default     = false
+}
+
+variable "google_oauth_client_id" {
+  type        = string
+  description = "Optional for use google oauth with zipline authentication"
+  default     = ""
+}
+
+variable "google_oauth_client_secret" {
+  type        = string
+  description = "Optional for use google oauth with zipline authentication"
+  default     = ""
+  sensitive   = true
+}
+
+variable "github_oauth_client_id" {
+  type        = string
+  description = "Optional for use github oauth with zipline authentication"
+  default     = ""
+}
+
+variable "github_oauth_client_secret" {
+  type        = string
+  description = "Optional for use github oauth with zipline authentication"
+  default     = ""
+  sensitive   = true
+}
+
+variable "microsoft_entra_tenant_id" {
+  type        = string
+  description = "Optional for use Microsoft Entra id with zipline authentication"
+  default     = ""
+}
+
+variable "microsoft_entra_oauth_client_id" {
+  type        = string
+  description = "Optional for use Microsoft Entra id with zipline authentication"
+  default     = ""
+}
+
+
+variable "microsoft_entra_oauth_client_secret" {
+  type        = string
+  description = "Optional for use microsoft Entra ID with zipline authentication"
+  default     = ""
+  sensitive   = true
+}
+
+variable "sso_provider_id" {
+  type        = string
+  description = "Optional for use SSO with zipline authentication"
+  default     = ""
+}
+
+variable "sso_domain" {
+  type        = string
+  description = "Optional for use SSO with zipline authentication"
+  default     = ""
+}
+
+variable "sso_issuer" {
+  type        = string
+  description = "Optional for use SSO with zipline authentication"
+  default     = ""
+}
+
+variable "sso_client_id" {
+  type        = string
+  description = "Optional for use SSO with zipline authentication"
+  default     = ""
+}
+
+variable "sso_client_secret" {
+  type        = string
+  description = "Optional for use SSO with zipline authentication"
+  default     = ""
+  sensitive   = true
 }
