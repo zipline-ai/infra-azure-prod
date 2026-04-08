@@ -3,6 +3,7 @@ global:
   customer_name: ""
   artifact_prefix: ""
   version: ""
+  deploy_fetcher: false
 
 # Cosmos DB configuration
 cosmos:
@@ -77,6 +78,18 @@ orchestration:
       limits:
         cpu: "1000m"
         memory: "1Gi"
+
+  fetcher:
+    image: "ziplineai/chronon-fetcher"
+    replicas: 3
+    port: 9000
+    resources:
+      limits:
+        cpu: "4"
+        memory: "16Gi"
+      requests:
+        cpu: "4"
+        memory: "16Gi"
 
   eval:
     image: "ziplineai/eval-azure"

@@ -86,6 +86,9 @@ resource "helm_release" "zipline_orchestration" {
       cert_manager_email = var.admin_email
 
       node_resource_group = var.aks_node_resource_group
+
+      deploy_fetcher = var.deploy_fetcher
+
       zipline_auth_enabled = var.zipline_auth_enabled
       zipline_auth_url     = var.ui_domain != "" ? "https://${var.ui_domain}" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"
       zipline_auth_jwksUrl = var.ui_domain != "" ? "https://${var.ui_domain}/api/auth/jwks" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000/api/auth/jwks"

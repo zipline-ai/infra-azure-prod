@@ -56,6 +56,10 @@ spec:
               value: "{{ .Values.azure.loki_endpoint }}"
             - name: AZURE_CUSTOMER_ID
               value: "{{ .Values.global.customer_name }}"
+            {{- if .Values.global.deploy_fetcher }}
+            - name: FETCHER_BASE_URL
+              value: "http://fetcher-service"
+            {{- end }}
             - name: AUTH_ENABLED
               value: "{{ .Values.auth.enabled }}"
             {{- if .Values.auth.enabled }}
