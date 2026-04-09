@@ -154,6 +154,7 @@ variable "hub_subnet_name" {
 
 variable "kyuubi_host" {
   description = "The host of the kyuubi cluster"
+  default = ""
 }
 
 variable "kyuubi_port" {
@@ -180,6 +181,7 @@ variable "kyuubi_password_secret" {
 
 variable "spark_history_server_url" {
   description = "The url of the spark history server"
+  default     = ""
 }
 
 # Domain Configuration

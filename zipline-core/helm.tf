@@ -63,7 +63,7 @@ resource "helm_release" "zipline_orchestration" {
       kyuubi_username_secret = var.kyuubi_username_secret
       kyuubi_password_secret = var.kyuubi_password_secret
 
-      spark_history_server_url = var.spark_history_server_url
+      spark_history_server_url = var.spark_history_server_url != "" ? var.spark_history_server_url : "http://spark-history-${var.customer_name}.${var.location}.cloudapp.azure.com:18080"
 
       workload_identity_client_id = data.azurerm_user_assigned_identity.workload_identity.client_id
       workload_identity_name      = data.azurerm_user_assigned_identity.workload_identity.name
@@ -77,8 +77,6 @@ resource "helm_release" "zipline_orchestration" {
       orchestration_hub_static_ip       = azurerm_public_ip.hub_ingress.ip_address
       orchestration_ui_static_ip_name   = azurerm_public_ip.ui_ingress.name
       orchestration_ui_static_ip        = azurerm_public_ip.ui_ingress.ip_address
-      orchestration_eval_static_ip_name = azurerm_public_ip.eval_ingress.name
-      orchestration_eval_static_ip      = azurerm_public_ip.eval_ingress.ip_address
 
       hub_dns_name       = "${var.hub_domain}"
       ui_dns_name        = "${var.ui_domain}"
@@ -198,14 +196,6 @@ resource "azurerm_public_ip" "hub_ingress" {
 
 resource "azurerm_public_ip" "ui_ingress" {
   name                = "${var.customer_name}-zipline-ui-pip"
-  resource_group_name = var.aks_node_resource_group
-  location            = var.location
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
-
-resource "azurerm_public_ip" "eval_ingress" {
-  name                = "${var.customer_name}-zipline-eval-pip"
   resource_group_name = var.aks_node_resource_group
   location            = var.location
   allocation_method   = "Static"
@@ -518,5 +508,57 @@ resource "helm_release" "kyuubi" {
 
   depends_on = [
     kubernetes_namespace_v1.kyuubi,
+  ]
+}
+
+# Long-lived SA token for Kyuubi K8s API access (avoids bound token expiry)
+# Must be created after helm_release.kyuubi which creates the kyuubi service account.
+resource "kubernetes_secret_v1" "kyuubi_sa_token" {
+  count    = var.kyuubi_host == "" ? 1 : 0
+  provider = kubernetes.kyuubi
+  metadata {
+    name      = "kyuubi-sa-token"
+    namespace = kubernetes_namespace_v1.kyuubi[0].metadata[0].name
+    annotations = {
+      "kubernetes.io/service-account.name" = "kyuubi"
+    }
+  }
+
+  type = "kubernetes.io/service-account-token"
+
+  depends_on = [helm_release.kyuubi]
+}
+
+# Deploy Spark History Server (to kyuubi cluster)
+resource "helm_release" "spark_history_server" {
+  count    = var.spark_history_server_url == "" ? 1 : 0
+  provider = helm.kyuubi
+
+  name             = "spark-history-server"
+  chart            = "../charts/spark-history-server"
+  namespace        = "kyuubi"
+  create_namespace = false
+
+  values = [
+    yamlencode({
+      azure = {
+        storageAccountName = var.azure_storage_account_name
+        eventLogDir        = "abfss://warehouse@${var.azure_storage_account_name}.dfs.core.windows.net/spark-events"
+        clientId           = var.kyuubi_workload_identity_client_id
+        # tenantId uses default from chart values.yaml
+      }
+      service = {
+        type = "LoadBalancer"
+        port = 18080
+        annotations = {
+          "service.beta.kubernetes.io/azure-dns-label-name" = "spark-history-${var.customer_name}"
+        }
+      }
+    })
+  ]
+
+  depends_on = [
+    kubernetes_namespace_v1.kyuubi,
+    helm_release.kyuubi,
   ]
 }
