@@ -59,8 +59,6 @@ spec:
               value: "{{ .Values.azure.storage_account_name }}"
             - name: AZURE_STORAGE_ACCOUNT_KEY
               value: "{{ .Values.azure.storage_account_key }}"
-            - name: WAREHOUSE_NAME
-              value: "{{ .Values.azure.warehouse_container_name }}"
             - name: KYUUBI_HOST
               value: "{{ .Values.kyuubi.host }}"
             - name: KYUUBI_PORT
