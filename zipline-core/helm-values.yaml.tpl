@@ -133,8 +133,6 @@ staticIPs:
   orchestrationUIName: "${orchestration_ui_static_ip_name}"
   orchestrationHub: "${orchestration_hub_static_ip}"
   orchestrationHubName: "${orchestration_hub_static_ip_name}"
-  orchestrationEval: "${orchestration_eval_static_ip}"
-  orchestrationEvalName: "${orchestration_eval_static_ip_name}"
 
 auth:
   enabled: "${zipline_auth_enabled}"
