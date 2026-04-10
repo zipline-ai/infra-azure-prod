@@ -11,13 +11,13 @@ imagePullSecrets: []
 
 # Azure Storage configuration
 azure:
-  storageAccountName: ziplineai2
+  storageAccountName: ""
   # Event log directory in ABFS format
-  eventLogDir: abfss://warehouse@ziplineai2.dfs.core.windows.net/spark-events
+  eventLogDir: ""
   # Azure AD tenant ID for Workload Identity
-  tenantId: "48e0cf82-8462-48fe-b995-5accce3156d0"
+  tenantId: ""
   # Managed Identity client ID (same as in Kyuubi service account)
-  clientId: "52a48acf-9dd6-476c-b432-ac46995a7173"
+  clientId: ""
 
 # Use existing Kyuubi service account (has Azure Workload Identity configured)
 serviceAccount:
@@ -33,7 +33,7 @@ service:
   type: LoadBalancer
   port: 18080
   annotations:
-    service.beta.kubernetes.io/azure-dns-label-name: spark-history-dev
+    service.beta.kubernetes.io/azure-dns-label-name: ""
 
 # History Server configuration
 historyServer:
