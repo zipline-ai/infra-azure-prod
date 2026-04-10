@@ -551,6 +551,7 @@ resource "helm_release" "spark_history_server" {
       azure = {
         storageAccountName = var.azure_storage_account_name
         eventLogDir        = "abfss://warehouse@${var.azure_storage_account_name}.dfs.core.windows.net/spark-events"
+        tenentId           = data.azurerm_client_config.current.tenant_id
         clientId           = var.kyuubi_workload_identity_client_id
         # tenantId uses default from chart values.yaml
       }
