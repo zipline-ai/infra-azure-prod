@@ -438,10 +438,6 @@ output "ui_address" {
   value = azurerm_public_ip.ui_ingress.ip_address
 }
 
-output "eval_address" {
-  value = azurerm_public_ip.eval_ingress.ip_address
-}
-
 output "dns_setup_instructions" {
   description = "Instructions for configuring DNS records"
   value       = <<EOT
@@ -462,16 +458,27 @@ RECORD 2 (UI):
   - Type:       A
   - Value:      ${azurerm_public_ip.ui_ingress.ip_address}
 
-RECORD 3 (Eval):
-  - Host/Name:  ${var.eval_domain}
-  - Type:       A
-  - Value:      ${azurerm_public_ip.eval_ingress.ip_address}
-
 --------------------------------------------------------------------------------
 Once configured, please allow a few minutes for DNS propagation.
 Cert-Manager will automatically provision TLS certificates once the records resolve.
 --------------------------------------------------------------------------------
 EOT
+}
+
+output "hub_domain" {
+  value = var.hub_domain
+}
+
+output "ui_domain" {
+  value = var.ui_domain
+}
+
+output "eval_domain" {
+  value = "${var.ui_domain}/services/eval"
+}
+
+output "fetcher_domain" {
+  value = "${var.ui_domain}/services/fetcher"
 }
 
 #############################################################
