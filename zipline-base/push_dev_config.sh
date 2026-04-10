@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Define variables
 STORAGE_ACCOUNT="ziplineai2"
@@ -17,13 +18,16 @@ echo "Pushing dev configuration files to Azure Storage..."
 for FILE in "${FILES[@]}"; do
     if [ -f "$FILE" ]; then
         echo "Uploading $FILE..."
-        az storage blob upload \
+        if ! az storage blob upload \
             --account-name "$STORAGE_ACCOUNT" \
             --container-name "$CONTAINER_NAME" \
             --name "$BLOB_PATH_PREFIX/$FILE" \
             --file "$FILE" \
             --overwrite \
-            --auth-mode login
+            --auth-mode login; then
+            echo "Error: failed to upload $FILE" >&2
+            exit 1
+        fi
     else
         echo "Warning: $FILE not found, skipping."
     fi
