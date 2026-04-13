@@ -73,10 +73,10 @@ resource "helm_release" "zipline_orchestration" {
       tenant_id                   = data.azurerm_client_config.current.tenant_id
       keyvault_identity_client_id = var.keyvault_identity_client_id
 
-      orchestration_hub_static_ip_name  = azurerm_public_ip.hub_ingress.name
-      orchestration_hub_static_ip       = azurerm_public_ip.hub_ingress.ip_address
-      orchestration_ui_static_ip_name   = azurerm_public_ip.ui_ingress.name
-      orchestration_ui_static_ip        = azurerm_public_ip.ui_ingress.ip_address
+      orchestration_hub_static_ip_name = azurerm_public_ip.hub_ingress.name
+      orchestration_hub_static_ip      = azurerm_public_ip.hub_ingress.ip_address
+      orchestration_ui_static_ip_name  = azurerm_public_ip.ui_ingress.name
+      orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
 
       hub_dns_name       = "${var.hub_domain}"
       ui_dns_name        = "${var.ui_domain}"
