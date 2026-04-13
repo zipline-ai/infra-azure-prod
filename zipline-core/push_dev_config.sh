@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Define variables
 STORAGE_ACCOUNT="ziplineai2"
