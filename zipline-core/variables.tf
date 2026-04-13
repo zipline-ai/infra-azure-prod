@@ -154,7 +154,7 @@ variable "hub_subnet_name" {
 
 variable "kyuubi_host" {
   description = "The host of the kyuubi cluster"
-  default = ""
+  default     = ""
 }
 
 variable "kyuubi_port" {

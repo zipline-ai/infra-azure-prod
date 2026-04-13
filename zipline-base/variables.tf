@@ -15,11 +15,11 @@ variable "subscription_id" {
 
 variable "acr_name" {
   description = "The ACR name"
-  default = ""
+  default     = ""
 }
 
 variable "acr_resource_group" {
   description = "The ACR resource group"
-  default = ""
+  default     = ""
 
 }
