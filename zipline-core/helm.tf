@@ -87,7 +87,8 @@ resource "helm_release" "zipline_orchestration" {
 
       node_resource_group = var.aks_node_resource_group
 
-      deploy_fetcher = var.deploy_fetcher
+      deploy_fetcher   = var.deploy_fetcher
+      fetcher_replicas = var.fetcher_replicas
 
       zipline_auth_enabled            = var.zipline_auth_enabled
       zipline_auth_url                = var.ui_domain != "" ? "https://${var.ui_domain}" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"

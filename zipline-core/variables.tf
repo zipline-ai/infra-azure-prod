@@ -23,6 +23,12 @@ variable "deploy_fetcher" {
   default     = false
 }
 
+variable "fetcher_replicas" {
+  type        = number
+  description = "Number of fetcher replicas"
+  default     = 3
+}
+
 # Azure Storage Configuration
 
 variable "azure_storage_account_name" {
