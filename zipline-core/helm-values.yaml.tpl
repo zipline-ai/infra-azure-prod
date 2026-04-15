@@ -7,6 +7,10 @@ global:
 imagePullSecrets:
   - name: "${image_pull_secret_name}"
 
+orchestration:
+    fetcher:
+        replicas: ${fetcher_replicas}
+
 # Ingress NGINX Controller for UI
 ingress-nginx-ui:
   enabled: true
