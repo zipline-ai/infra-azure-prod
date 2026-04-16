@@ -197,8 +197,8 @@ resource "azurerm_kubernetes_cluster" "kyuubi_cluster" {
 
   network_profile {
     network_plugin = "azure"
-    dns_service_ip = "10.0.7.10"
-    service_cidr   = "10.0.7.0/24"
+    dns_service_ip = "10.0.9.10"
+    service_cidr   = "10.0.9.0/24"
   }
 
   oidc_issuer_enabled       = true
@@ -244,6 +244,48 @@ resource "azurerm_role_assignment" "kyuubi_monitoring_publisher" {
   scope                = azurerm_log_analytics_workspace.kyuubi.id
   role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = azurerm_kubernetes_cluster.kyuubi_cluster.identity[0].principal_id
+}
+
+# Container Insights DCR for Kyuubi cluster (required for MSI-auth OMS agent to send logs)
+resource "azurerm_monitor_data_collection_rule" "kyuubi_container_insights" {
+  name                = "MSCI-${var.location}-${var.customer_name}-kyuubi-aks"
+  resource_group_name = azurerm_resource_group.hub_rg.name
+  location            = azurerm_resource_group.hub_rg.location
+  kind                = "Linux"
+
+  destinations {
+    log_analytics {
+      workspace_resource_id = azurerm_log_analytics_workspace.aks.id
+      name                  = "ciworkspace"
+    }
+  }
+
+  data_flow {
+    streams      = ["Microsoft-ContainerInsights-Group-Default"]
+    destinations = ["ciworkspace"]
+  }
+
+  data_sources {
+    extension {
+      streams        = ["Microsoft-ContainerInsights-Group-Default"]
+      extension_name = "ContainerInsights"
+      extension_json = jsonencode({
+        "dataCollectionSettings" : {
+          "enableContainerLogV2" : true
+        }
+      })
+      name = "ContainerInsightsExtension"
+    }
+  }
+
+  description = "DCR for Azure Monitor Container Insights on Kyuubi cluster"
+}
+
+resource "azurerm_monitor_data_collection_rule_association" "kyuubi_container_insights" {
+  name                    = "ContainerInsightsExtension"
+  target_resource_id      = azurerm_kubernetes_cluster.kyuubi_cluster.id
+  data_collection_rule_id = azurerm_monitor_data_collection_rule.kyuubi_container_insights.id
+  description             = "Association of container insights data collection rule for Kyuubi AKS cluster."
 }
 
 resource "azurerm_role_assignment" "kyuubi_aks_kv_reader" {

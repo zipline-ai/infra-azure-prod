@@ -55,8 +55,6 @@ staticIPs:
   orchestrationUIName: ""
   orchestrationHub: ""
   orchestrationHubName: ""
-  orchestrationEval: ""
-  orchestrationEvalName: ""
 
 
 # Orchestration services configuration
@@ -173,11 +171,6 @@ ingress:
     annotations:
       nginx.ingress.kubernetes.io/health-check-path: "/ping"
       nginx.ingress.kubernetes.io/proxy-body-size: "20m"
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  eval:
-    className: nginx-eval
-    host: ""
-    annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
 database:

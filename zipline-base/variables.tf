@@ -12,3 +12,14 @@ variable "azure_storage_account_id" {
 variable "subscription_id" {
   description = "The Azure subscription ID"
 }
+
+variable "acr_name" {
+  description = "The ACR name"
+  default     = ""
+}
+
+variable "acr_resource_group" {
+  description = "The ACR resource group"
+  default     = ""
+
+}
