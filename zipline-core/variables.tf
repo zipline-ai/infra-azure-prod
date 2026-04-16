@@ -23,6 +23,17 @@ variable "deploy_fetcher" {
   default     = false
 }
 
+variable "fetcher_replicas" {
+  type        = number
+  description = "Number of fetcher replicas"
+  default     = 3
+
+  validation {
+    condition     = var.fetcher_replicas >= 0 && floor(var.fetcher_replicas) == var.fetcher_replicas
+    error_message = "fetcher_replicas must be a non-negative whole number."
+  }
+}
+
 # Azure Storage Configuration
 
 variable "azure_storage_account_name" {
