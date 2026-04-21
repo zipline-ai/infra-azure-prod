@@ -152,3 +152,5 @@ auth:
   sso_domain: "${sso_domain}"
   sso_issuer: "${sso_issuer}"
   sso_client_id: "${sso_client_id}"
+  idp_role_mapping: "${idp_role_mapping}"
+  idp_group_claim: "${idp_group_claim}"
