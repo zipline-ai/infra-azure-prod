@@ -87,6 +87,7 @@ resource "helm_release" "zipline_orchestration" {
       orchestration_eval_static_ip      = azurerm_public_ip.eval_ingress.ip_address
 
       hub_dns_name       = "${var.hub_domain}"
+      hub_external_url   = var.hub_external_url
       ui_dns_name        = "${var.ui_domain}"
       eval_dns_name      = "${var.eval_domain}"
       cert_manager_email = var.admin_email

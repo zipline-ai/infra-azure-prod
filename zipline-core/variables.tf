@@ -385,6 +385,12 @@ variable "sso_client_secret" {
   sensitive   = true
 }
 
+variable "hub_external_url" {
+  type        = string
+  description = "Override HUB_BASE_URL directly (e.g., http://my-hub-1.2.3.4). Use when a custom proxy sits in front of the nginx LB and hub_domain is not set."
+  default     = ""
+}
+
 # Flink Configuration
 
 variable "flink_workload_identity_client_id" {
