@@ -384,3 +384,15 @@ variable "sso_client_secret" {
   default     = ""
   sensitive   = true
 }
+
+variable "idp_role_mapping" {
+  type        = string
+  description = "Optional comma separated list of role mappings for zipline authentication"
+  default     = "Zipline Admins:admin,Zipline Operators:operator"
+}
+
+variable "idp_group_claim" {
+  type        = string
+  description = "Optional group claims configured for zipline authentication"
+  default     = "groups"
+}
