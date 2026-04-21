@@ -196,6 +196,14 @@ clusterIssuer:
   server: "https://acme-v02.api.letsencrypt.org/directory"
 
 
+# Flink on AKS configuration
+flink:
+  aksServiceAccount: ""
+  aksNamespace: ""
+  image: ""
+  azureClientId: ""
+  azureTenantId: ""
+
 imagePullSecrets:
   - name: my-registry-key
 

@@ -140,6 +140,13 @@ staticIPs:
   orchestrationEval: "${orchestration_eval_static_ip}"
   orchestrationEvalName: "${orchestration_eval_static_ip_name}"
 
+flink:
+  aksServiceAccount: "${flink_aks_service_account}"
+  aksNamespace: "${flink_aks_namespace}"
+  image: "${flink_image}"
+  azureClientId: "${flink_azure_client_id}"
+  azureTenantId: "${flink_azure_tenant_id}"
+
 auth:
   enabled: "${zipline_auth_enabled}"
   url: "${zipline_auth_url}"
