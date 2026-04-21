@@ -69,6 +69,9 @@ ingress:
   hub:
     className: nginx-hub
     host: "${hub_dns_name}"
+%{ if hub_external_url != "" }
+    externalUrl: "${hub_external_url}"
+%{ endif }
     annotations:
 %{ if enable_oauth ~}
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"

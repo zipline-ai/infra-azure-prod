@@ -110,7 +110,10 @@ spec:
               value: "{{ .Values.flink.azureClientId }}"
             - name: FLINK_AZURE_TENANT_ID
               value: "{{ .Values.flink.azureTenantId }}"
-            {{- if .Values.ingress.hub.host }}
+            {{- if .Values.ingress.hub.externalUrl }}
+            - name: HUB_BASE_URL
+              value: {{ .Values.ingress.hub.externalUrl | quote }}
+            {{- else if .Values.ingress.hub.host }}
             - name: HUB_BASE_URL
               value: "https://{{ .Values.ingress.hub.host }}"
             {{- end }}

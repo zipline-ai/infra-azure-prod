@@ -397,7 +397,8 @@ terraform apply
 
 ### 2.4 Set DNS Records for the Hub and UI domains
 
-Use the outputted hub_address and ui_address to set DNS A records:
+`hub_domain` and `ui_domain` are optional. If set, use the outputted addresses to configure DNS A records and enable HTTPS via cert-manager. If left unset, see [Hub URL configuration](#hub-url-configuration) below.
+
 ```
 --------------------------------------------------------------------------------
 DNS CONFIGURATION REQUIRED
@@ -420,6 +421,30 @@ Once configured, please allow a few minutes for DNS propagation.
 Cert-Manager will automatically provision TLS certificates once the records resolve.
 --------------------------------------------------------------------------------
 ```
+
+## Hub URL configuration
+
+The hub needs to know its own external URL (`HUB_BASE_URL`) to generate correct Flink UI links. There are three supported configurations:
+
+### Option 1: Custom domain (recommended for production)
+
+Set `hub_domain` to your custom hostname. Terraform provisions a cert-manager certificate, configures TLS termination, and sets `HUB_BASE_URL=https://<hub_domain>` automatically.
+
+```hcl
+hub_domain = "zipline-hub.yourcompany.com"
+```
+
+### Option 2: Custom proxy in front of the nginx LB
+
+If you have your own load balancer or proxy in front of the hub nginx LB and don't want to manage a cert for it, set `hub_external_url` directly. No certificate is created.
+
+```hcl
+hub_external_url = "http://my-hub-1.2.3.4"
+```
+
+### Option 3: No custom domain (LB IP only)
+
+If neither `hub_domain` nor `hub_external_url` is set, a Helm post-install/upgrade Job automatically looks up the hub LB IP address and sets `HUB_BASE_URL=http://<lb-ip>`. No extra configuration needed.
 
 ## 3. Artifact Setup
 
