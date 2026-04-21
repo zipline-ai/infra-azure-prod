@@ -384,3 +384,29 @@ variable "sso_client_secret" {
   default     = ""
   sensitive   = true
 }
+
+# Flink Configuration
+
+variable "flink_workload_identity_client_id" {
+  description = "Client ID of the Flink managed identity (from zipline-base output)"
+  type        = string
+  default     = ""
+}
+
+variable "flink_aks_service_account" {
+  description = "Kubernetes service account name for Flink job pods"
+  type        = string
+  default     = "zipline-flink-sa"
+}
+
+variable "flink_aks_namespace" {
+  description = "Kubernetes namespace for Flink jobs"
+  type        = string
+  default     = "zipline-flink"
+}
+
+variable "flink_image" {
+  description = "Custom Flink Docker image. Defaults to ziplineai/flink:1.20.3"
+  type        = string
+  default     = "ziplineai/flink:1.20.3"
+}
