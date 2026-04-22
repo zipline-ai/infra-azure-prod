@@ -69,6 +69,9 @@ ingress:
   hub:
     className: nginx-hub
     host: "${hub_dns_name}"
+%{ if hub_external_url != "" }
+    externalUrl: "${hub_external_url}"
+%{ endif }
     annotations:
 %{ if enable_oauth ~}
       nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
@@ -139,6 +142,13 @@ staticIPs:
   orchestrationHubName: "${orchestration_hub_static_ip_name}"
   orchestrationEval: "${orchestration_eval_static_ip}"
   orchestrationEvalName: "${orchestration_eval_static_ip_name}"
+
+flink:
+  aksServiceAccount: "${flink_aks_service_account}"
+  aksNamespace: "${flink_aks_namespace}"
+  image: "${flink_image}"
+  azureClientId: "${flink_azure_client_id}"
+  azureTenantId: "${flink_azure_tenant_id}"
 
 auth:
   enabled: "${zipline_auth_enabled}"
