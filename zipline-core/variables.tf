@@ -418,3 +418,10 @@ variable "flink_image" {
   type        = string
   default     = "ziplineai/flink:1.20.3"
 }
+
+variable "event_hubs_connection_string" {
+  description = "SAS connection string for the Azure Event Hubs namespace used as the Apicurio Schema Registry Kafka backend. Format: Endpoint=sb://zipline-demo-events.servicebus.windows.net/;SharedAccessKeyName=...;SharedAccessKey=..."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
