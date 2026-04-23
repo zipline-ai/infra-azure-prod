@@ -388,13 +388,13 @@ variable "sso_client_secret" {
 variable "idp_role_mapping" {
   type        = string
   description = "Optional comma separated list of role mappings for zipline authentication"
-  default     = "Zipline Admins:admin,Zipline Operators:operator"
+  default     = ""
 }
 
 variable "idp_group_claim" {
   type        = string
   description = "Optional group claims configured for zipline authentication"
-  default     = "groups"
+  default     = ""
 }
 
 variable "hub_external_url" {
