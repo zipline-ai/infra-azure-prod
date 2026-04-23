@@ -69,6 +69,12 @@ resource "helm_release" "zipline_orchestration" {
       workload_identity_name      = data.azurerm_user_assigned_identity.workload_identity.name
       image_pull_secret_name      = kubernetes_secret_v1.docker_hub_creds.metadata[0].name
 
+      flink_aks_service_account = var.flink_aks_service_account
+      flink_aks_namespace       = var.flink_aks_namespace
+      flink_image               = var.flink_image
+      flink_azure_client_id     = var.flink_workload_identity_client_id
+      flink_azure_tenant_id     = data.azurerm_client_config.current.tenant_id
+
       keyvault_name               = var.keyvault_name
       tenant_id                   = data.azurerm_client_config.current.tenant_id
       keyvault_identity_client_id = var.keyvault_identity_client_id
@@ -79,13 +85,15 @@ resource "helm_release" "zipline_orchestration" {
       orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
 
       hub_dns_name       = "${var.hub_domain}"
+      hub_external_url   = var.hub_external_url
       ui_dns_name        = "${var.ui_domain}"
       eval_dns_name      = "${var.eval_domain}"
       cert_manager_email = var.admin_email
 
       node_resource_group = var.aks_node_resource_group
 
-      deploy_fetcher = var.deploy_fetcher
+      deploy_fetcher   = var.deploy_fetcher
+      fetcher_replicas = var.fetcher_replicas
 
       zipline_auth_enabled            = var.zipline_auth_enabled
       zipline_auth_url                = var.ui_domain != "" ? "https://${var.ui_domain}" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"
@@ -103,7 +111,8 @@ resource "helm_release" "zipline_orchestration" {
 
   depends_on = [
     kubernetes_secret_v1.docker_hub_creds,
-    helm_release.cert_manager
+    helm_release.cert_manager,
+    kubernetes_role_binding_v1.orchestration_flink_role_binding,
   ]
 }
 

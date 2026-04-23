@@ -168,6 +168,7 @@ ingress:
   hub:
     className: nginx-hub
     host: ""
+    externalUrl: ""  # Override HUB_BASE_URL directly (e.g. http://my-hub-1.2.3.4). Use when a custom proxy sits in front of the nginx LB.
     annotations:
       nginx.ingress.kubernetes.io/health-check-path: "/ping"
       nginx.ingress.kubernetes.io/proxy-body-size: "20m"
@@ -188,6 +189,14 @@ clusterIssuer:
   email: ""
   server: "https://acme-v02.api.letsencrypt.org/directory"
 
+
+# Flink on AKS configuration
+flink:
+  aksServiceAccount: ""
+  aksNamespace: ""
+  image: ""
+  azureClientId: ""
+  azureTenantId: ""
 
 imagePullSecrets:
   - name: my-registry-key

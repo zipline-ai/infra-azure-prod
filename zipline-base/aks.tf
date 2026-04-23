@@ -108,6 +108,33 @@ resource "azurerm_role_assignment" "workload_storage_contributor" {
   principal_id         = azurerm_user_assigned_identity.workload.principal_id
 }
 
+#############################################################
+# Flink Workload Identity (for zipline-flink-sa in zipline-flink namespace)
+#############################################################
+
+resource "azurerm_user_assigned_identity" "flink_workload" {
+  name                = "${var.customer_name}-zipline-flink-identity"
+  resource_group_name = azurerm_resource_group.hub_rg.name
+  location            = azurerm_resource_group.hub_rg.location
+}
+
+# Federated credential issuer must reference the hub cluster OIDC URL,
+# which is only available in this module (not in zipline-core/).
+resource "azurerm_federated_identity_credential" "flink_workload" {
+  name                = "${var.customer_name}-zipline-flink-federated-credential"
+  resource_group_name = azurerm_resource_group.hub_rg.name
+  parent_id           = azurerm_user_assigned_identity.flink_workload.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = azurerm_kubernetes_cluster.hub_cluster.oidc_issuer_url
+  subject             = "system:serviceaccount:zipline-flink:zipline-flink-sa"
+}
+
+resource "azurerm_role_assignment" "flink_storage_contributor" {
+  scope                = var.azure_storage_account_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.flink_workload.principal_id
+}
+
 resource "azurerm_role_assignment" "aks_kv_reader" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"
@@ -363,4 +390,12 @@ output "kyuubi_internal_port" {
 output "kyuubi_workload_identity_client_id" {
   description = "Client ID for Kyuubi workload identity"
   value       = azurerm_user_assigned_identity.kyuubi_workload.client_id
+}
+
+output "flink_workload_identity_client_id" {
+  value = azurerm_user_assigned_identity.flink_workload.client_id
+}
+
+output "flink_workload_identity_principal_id" {
+  value = azurerm_user_assigned_identity.flink_workload.principal_id
 }
