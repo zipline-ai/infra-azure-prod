@@ -396,3 +396,35 @@ variable "idp_group_claim" {
   description = "Optional group claims configured for zipline authentication"
   default     = "groups"
 }
+
+variable "hub_external_url" {
+  type        = string
+  description = "Override HUB_BASE_URL directly (e.g., http://my-hub-1.2.3.4). Use when a custom proxy sits in front of the nginx LB and hub_domain is not set."
+  default     = ""
+}
+
+# Flink Configuration
+
+variable "flink_workload_identity_client_id" {
+  description = "Client ID of the Flink managed identity (from zipline-base output)"
+  type        = string
+  default     = ""
+}
+
+variable "flink_aks_service_account" {
+  description = "Kubernetes service account name for Flink job pods"
+  type        = string
+  default     = "zipline-flink-sa"
+}
+
+variable "flink_aks_namespace" {
+  description = "Kubernetes namespace for Flink jobs"
+  type        = string
+  default     = "zipline-flink"
+}
+
+variable "flink_image" {
+  description = "Custom Flink Docker image. Defaults to ziplineai/flink:1.20.3"
+  type        = string
+  default     = "ziplineai/flink:1.20.3"
+}
