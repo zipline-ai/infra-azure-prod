@@ -5,6 +5,13 @@ terraform {
   #   container_name       = ""
   #   key                  = ""
   # }
+
+  required_providers {
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.14"
+    }
+  }
 }
 
 provider "azurerm" {
@@ -29,6 +36,14 @@ provider "helm" {
     client_key             = base64decode(var.aks_client_key)
     cluster_ca_certificate = base64decode(var.aks_cluster_ca_certificate)
   }
+}
+
+provider "kubectl" {
+  host                   = var.aks_host
+  client_certificate     = base64decode(var.aks_client_certificate)
+  client_key             = base64decode(var.aks_client_key)
+  cluster_ca_certificate = base64decode(var.aks_cluster_ca_certificate)
+  load_config_file       = false
 }
 
 # Kubernetes provider for kyuubi cluster
