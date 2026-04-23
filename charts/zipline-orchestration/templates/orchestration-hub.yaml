@@ -98,6 +98,25 @@ spec:
               value: "{{ .Values.auth.enabled }}"
             - name: AUTH_JWKS_URL
               value: "{{ .Values.auth.jwksUrl }}"
+            - name: FLINK_AKS_SERVICE_ACCOUNT
+              value: "{{ .Values.flink.aksServiceAccount }}"
+            - name: FLINK_AKS_NAMESPACE
+              value: "{{ .Values.flink.aksNamespace }}"
+            {{- if .Values.flink.image }}
+            - name: FLINK_IMAGE
+              value: "{{ .Values.flink.image }}"
+            {{- end }}
+            - name: FLINK_AZURE_CLIENT_ID
+              value: "{{ .Values.flink.azureClientId }}"
+            - name: FLINK_AZURE_TENANT_ID
+              value: "{{ .Values.flink.azureTenantId }}"
+            {{- if .Values.ingress.hub.externalUrl }}
+            - name: HUB_BASE_URL
+              value: {{ .Values.ingress.hub.externalUrl | quote }}
+            {{- else if .Values.ingress.hub.host }}
+            - name: HUB_BASE_URL
+              value: "https://{{ .Values.ingress.hub.host }}"
+            {{- end }}
           volumeMounts:
             - name: zipline-secrets-store
               mountPath: "/mnt/secrets-store"
