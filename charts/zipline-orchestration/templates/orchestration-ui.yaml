@@ -106,6 +106,10 @@ spec:
                 secretKeyRef:
                   name: auth-secret
                   key: sso-client-secret
+            - name: IDP_ROLE_MAPPING
+              value: "{{ .Values.auth.idp_role_mapping }}"
+            - name: IDP_GROUP_CLAIM
+              value: "{{ .Values.auth.idp_group_claim }}"
             {{- end }}
           volumeMounts:
             - name: secrets-store-inline
