@@ -549,7 +549,7 @@ resource "kubernetes_secret_v1" "kyuubi_sa_token" {
 
 # Deploy Spark History Server (to kyuubi cluster)
 resource "helm_release" "spark_history_server" {
-  count    = var.spark_history_server_url == "" ? 1 : 0
+  count    = var.kyuubi_host == "" &&  var.spark_history_server_url == "" ? 1 : 0
   provider = helm.kyuubi
 
   name             = "spark-history-server"
