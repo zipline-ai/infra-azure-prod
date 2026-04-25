@@ -23,3 +23,9 @@ variable "acr_resource_group" {
   default     = ""
 
 }
+
+variable "key_vault_secrets_officer_principal_ids" {
+  description = "Entra object IDs that should be allowed to manage Key Vault secrets in the base vault"
+  type        = set(string)
+  default     = []
+}
