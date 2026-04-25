@@ -12,15 +12,15 @@ resource "azurerm_kubernetes_cluster" "hub_cluster" {
   default_node_pool {
     name                        = "default"
     node_count                  = 3
-    vm_size                     = "Standard_D8s_v6"
+    vm_size                     = "Standard_D16s_v6"
     vnet_subnet_id              = azurerm_subnet.hub_subnet.id
     temporary_name_for_rotation = "defaulttmp"
   }
 
   network_profile {
     network_plugin = "azure"
-    dns_service_ip = "10.0.3.10"
-    service_cidr   = "10.0.3.0/24"
+    dns_service_ip = "10.1.0.10"
+    service_cidr   = "10.1.0.0/24"
   }
 
   oidc_issuer_enabled       = true
