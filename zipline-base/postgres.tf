@@ -70,26 +70,16 @@ resource "azurerm_key_vault" "main" {
   purge_protection_enabled   = false
 }
 
-resource "azurerm_role_assignment" "kv_terraform_secrets_officer" {
-  scope                = azurerm_key_vault.main.id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
-}
-
 resource "azurerm_key_vault_secret" "pg_admin_username" {
   name         = "pg-admin-username"
   value        = "locker_user"
   key_vault_id = azurerm_key_vault.main.id
-
-  depends_on = [azurerm_role_assignment.kv_terraform_secrets_officer]
 }
 
 resource "azurerm_key_vault_secret" "pg_admin_password" {
   name         = "pg-admin-password"
   value        = random_password.db_password.result
   key_vault_id = azurerm_key_vault.main.id
-
-  depends_on = [azurerm_role_assignment.kv_terraform_secrets_officer]
 }
 
 
