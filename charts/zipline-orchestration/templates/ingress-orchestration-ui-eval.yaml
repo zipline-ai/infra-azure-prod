@@ -1,26 +1,27 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: eval-ingress
+  name: orchestration-ui-eval-ingress
   namespace: zipline-system
   labels:
     {{- include "zipline-orchestration.labels" . | nindent 4 }}
   annotations:
-    {{- with .Values.ingress.eval.annotations }}
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    {{- with .Values.ingress.ui.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.eval.className }}
+  ingressClassName: {{ .Values.ingress.ui.className }}
   tls:
     - hosts:
-        - {{ .Values.ingress.eval.host }}
-      secretName: eval-tls-secret
+        - {{ .Values.ingress.ui.host }}
+      secretName: ui-tls-secret
   rules:
-    - host: {{ .Values.ingress.eval.host }}
+    - host: {{ .Values.ingress.ui.host }}
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /services/eval(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: eval-service

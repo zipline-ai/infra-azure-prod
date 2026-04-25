@@ -65,7 +65,7 @@ spec:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: "pg-secret-provider"
+              secretProviderClass: "zipline-secret-provider"
 ---
 apiVersion: v1
 kind: Service
