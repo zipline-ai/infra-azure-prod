@@ -12,3 +12,20 @@ variable "azure_storage_account_id" {
 variable "subscription_id" {
   description = "The Azure subscription ID"
 }
+
+variable "acr_name" {
+  description = "The ACR name"
+  default     = ""
+}
+
+variable "acr_resource_group" {
+  description = "The ACR resource group"
+  default     = ""
+
+}
+
+variable "key_vault_secrets_officer_principal_ids" {
+  description = "Entra object IDs that should be allowed to manage Key Vault secrets in the base vault"
+  type        = set(string)
+  default     = []
+}

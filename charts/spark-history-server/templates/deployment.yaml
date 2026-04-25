@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spark-history-server.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "spark-history-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "spark-history-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "spark-history-server.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      initContainers:
+        - name: download-azure-jars
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cd /azure-jars
+              # Use Hadoop 3.4.2 - same as Kyuubi Spark jobs use via spark.jars.packages
+              curl -LO https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure/3.4.2/hadoop-azure-3.4.2.jar
+              curl -LO https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.4.2/hadoop-common-3.4.2.jar
+              # Azure SDK dependencies
+              curl -LO https://repo1.maven.org/maven2/com/azure/azure-storage-blob/12.25.1/azure-storage-blob-12.25.1.jar
+              curl -LO https://repo1.maven.org/maven2/com/azure/azure-storage-common/12.24.1/azure-storage-common-12.24.1.jar
+              curl -LO https://repo1.maven.org/maven2/com/azure/azure-core/1.46.0/azure-core-1.46.0.jar
+              curl -LO https://repo1.maven.org/maven2/com/azure/azure-core-http-netty/1.14.0/azure-core-http-netty-1.14.0.jar
+              curl -LO https://repo1.maven.org/maven2/com/azure/azure-storage-internal-avro/12.10.1/azure-storage-internal-avro-12.10.1.jar
+              curl -LO https://repo1.maven.org/maven2/com/azure/azure-identity/1.11.1/azure-identity-1.11.1.jar
+              curl -LO https://repo1.maven.org/maven2/com/microsoft/azure/msal4j/1.14.0/msal4j-1.14.0.jar
+              curl -LO https://repo1.maven.org/maven2/com/microsoft/azure/azure-storage/7.0.1/azure-storage-7.0.1.jar
+              ls -la
+          volumeMounts:
+            - name: azure-jars
+              mountPath: /azure-jars
+      containers:
+        - name: spark-history-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /opt/spark/bin/spark-class
+            - org.apache.spark.deploy.history.HistoryServer
+          env:
+            - name: SPARK_CONF_DIR
+              value: /opt/spark/conf
+            - name: HADOOP_CONF_DIR
+              value: /opt/spark/conf
+            # Prepend azure-jars to ensure Hadoop 3.4.2 classes load before bundled 3.3.4
+            - name: SPARK_DIST_CLASSPATH
+              value: "/azure-jars/*:/opt/spark/jars/*"
+            - name: SPARK_HISTORY_OPTS
+              value: "-Dspark.history.fs.logDirectory={{ .Values.azure.eventLogDir }}"
+          ports:
+            - name: http
+              containerPort: 18080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: spark-config
+              mountPath: /opt/spark/conf/spark-defaults.conf
+              subPath: spark-defaults.conf
+            - name: spark-config
+              mountPath: /opt/spark/conf/core-site.xml
+              subPath: core-site.xml
+            - name: azure-jars
+              mountPath: /azure-jars
+      volumes:
+        - name: spark-config
+          configMap:
+            name: {{ include "spark-history-server.fullname" . }}
+        - name: azure-jars
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

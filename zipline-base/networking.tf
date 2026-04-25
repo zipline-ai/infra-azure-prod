@@ -9,7 +9,7 @@ resource "azurerm_subnet" "hub_subnet" {
   name                 = "${var.customer_name}-zipline-hub-subnet"
   resource_group_name  = azurerm_resource_group.hub_rg.name
   virtual_network_name = azurerm_virtual_network.hub_vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
+  address_prefixes     = ["10.0.0.0/22"]
 }
 
 resource "azurerm_subnet" "postgres" {

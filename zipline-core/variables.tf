@@ -165,6 +165,7 @@ variable "hub_subnet_name" {
 
 variable "kyuubi_host" {
   description = "The host of the kyuubi cluster"
+  default     = ""
 }
 
 variable "kyuubi_port" {
@@ -191,6 +192,7 @@ variable "kyuubi_password_secret" {
 
 variable "spark_history_server_url" {
   description = "The url of the spark history server"
+  default     = ""
 }
 
 # Domain Configuration
@@ -427,4 +429,11 @@ variable "flink_image" {
   description = "Custom Flink Docker image. Defaults to ziplineai/flink:1.20.3"
   type        = string
   default     = "ziplineai/flink:1.20.3"
+}
+
+variable "event_hubs_connection_string" {
+  description = "SAS connection string for the Azure Event Hubs namespace used as the Apicurio Schema Registry Kafka backend. Format: Endpoint=sb://zipline-demo-events.servicebus.windows.net/;SharedAccessKeyName=...;SharedAccessKey=..."
+  type        = string
+  sensitive   = true
+  default     = ""
 }

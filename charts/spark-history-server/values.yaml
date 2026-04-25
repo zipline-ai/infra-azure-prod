@@ -1,0 +1,68 @@
+# Spark History Server configuration
+
+replicaCount: 1
+
+image:
+  repository: apache/spark
+  tag: 3.5.2-java17
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Azure Storage configuration
+azure:
+  storageAccountName: ""
+  # Event log directory in ABFS format
+  eventLogDir: ""
+  # Azure AD tenant ID for Workload Identity
+  tenantId: ""
+  # Managed Identity client ID (same as in Kyuubi service account)
+  clientId: ""
+
+# Use existing Kyuubi service account (has Azure Workload Identity configured)
+serviceAccount:
+  create: false
+  name: kyuubi
+
+# Pod labels for Azure Workload Identity
+podLabels:
+  azure.workload.identity/use: "true"
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 18080
+  annotations:
+    service.beta.kubernetes.io/azure-dns-label-name: ""
+
+# History Server configuration
+historyServer:
+  # How often to reload event log data
+  updateInterval: 10s
+  # Maximum number of applications to retain
+  maxApplications: 500
+  # Enable SHS to parse incomplete event logs
+  enableIncompleteEvents: true
+  # Cleaner settings
+  cleaner:
+    enabled: true
+    interval: 1d
+    maxAge: 7d
+
+# Resource requests and limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
