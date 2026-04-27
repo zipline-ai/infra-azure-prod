@@ -85,8 +85,7 @@ database:
     username: "${workload_identity_name}"
 
 kyuubi:
-  host: "${kyuubi_host}"
-  port: "${kyuubi_port}"
+  host: "${kyuubi_host}:${kyuubi_port}"
   credentials:
     enabled: ${kyuubi_auth_enabled}
     username_secret: "${kyuubi_username_secret}"

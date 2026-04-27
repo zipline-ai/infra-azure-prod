@@ -63,8 +63,6 @@ spec:
               value: "{{ .Values.azure.warehouse_container_name }}"
             - name: KYUUBI_HOST
               value: "{{ .Values.kyuubi.host }}"
-            - name: KYUUBI_PORT
-              value: "{{ .Values.kyuubi.port }}"
             {{ if .Values.kyuubi.credentials.enabled }}
             - name: KYUUBI_USERNAME
               valueFrom:
