@@ -34,7 +34,6 @@ keyvault:
 
 kyuubi:
   host: ""
-  port: ""
   credentials:
     enabled: false
     username_secret: ""
