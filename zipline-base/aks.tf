@@ -287,7 +287,7 @@ resource "azurerm_kubernetes_cluster" "kyuubi_cluster" {
   }
 
   oms_agent {
-    log_analytics_workspace_id      = azurerm_log_analytics_workspace.kyuubi.id
+    log_analytics_workspace_id      = azurerm_log_analytics_workspace.aks.id
     msi_auth_for_monitoring_enabled = true
   }
 
@@ -298,17 +298,8 @@ resource "azurerm_kubernetes_cluster" "kyuubi_cluster" {
   }
 }
 
-# Log Analytics Workspace for Kyuubi cluster
-resource "azurerm_log_analytics_workspace" "kyuubi" {
-  name                = "${var.customer_name}-kyuubi-logs"
-  location            = azurerm_resource_group.hub_rg.location
-  resource_group_name = azurerm_resource_group.hub_rg.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
-
 resource "azurerm_role_assignment" "kyuubi_monitoring_publisher" {
-  scope                = azurerm_log_analytics_workspace.kyuubi.id
+  scope                = azurerm_log_analytics_workspace.aks.id
   role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = azurerm_kubernetes_cluster.kyuubi_cluster.identity[0].principal_id
 }
@@ -322,7 +313,7 @@ resource "azurerm_monitor_data_collection_rule" "kyuubi_container_insights" {
 
   destinations {
     log_analytics {
-      workspace_resource_id = azurerm_log_analytics_workspace.kyuubi.id
+      workspace_resource_id = azurerm_log_analytics_workspace.aks.id
       name                  = "ciworkspace"
     }
   }
@@ -412,14 +403,6 @@ output "kyuubi_aks_cluster_ca_certificate" {
 
 output "kyuubi_aks_node_resource_group" {
   value = azurerm_kubernetes_cluster.kyuubi_cluster.node_resource_group
-}
-
-output "kyuubi_log_analytics_workspace_id" {
-  value = azurerm_log_analytics_workspace.kyuubi.id
-}
-
-output "kyuubi_log_analytics_workspace_name" {
-  value = azurerm_log_analytics_workspace.kyuubi.name
 }
 
 output "kyuubi_internal_port" {
