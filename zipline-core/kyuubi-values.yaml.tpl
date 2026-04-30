@@ -174,7 +174,7 @@ hadoopConf:
           <value>${azure_tenant_id}</value>
         </property>
         <property>
-          <name>fs.azure.fedauth.oauth2.token.file</name>
+          <name>fs.azure.account.oauth2.token.file</name>
           <value>/var/run/secrets/azure/tokens/azure-identity-token</value>
         </property>
       </configuration>
