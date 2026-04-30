@@ -53,6 +53,7 @@ spec:
       {{- if or .Values.serviceAccount.name .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.serviceAccount.name | default .Release.Name }}
       {{- end }}
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       {{- if or .Values.priorityClass.name .Values.priorityClass.create }}
       priorityClassName: {{ .Values.priorityClass.name | default .Release.Name }}
       {{- end }}

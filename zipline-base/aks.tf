@@ -48,7 +48,6 @@ resource "azurerm_kubernetes_cluster" "hub_cluster" {
   lifecycle {
     ignore_changes = [
       default_node_pool[0].upgrade_settings,
-      oms_agent,
     ]
   }
 }
@@ -70,6 +69,48 @@ resource "azurerm_role_assignment" "aks_monitoring_publisher" {
   scope                = azurerm_log_analytics_workspace.aks.id
   role_definition_name = "Monitoring Metrics Publisher"
   principal_id         = azurerm_kubernetes_cluster.hub_cluster.identity[0].principal_id
+}
+
+# Container Insights DCR for hub cluster (required for MSI-auth OMS agent to send logs)
+resource "azurerm_monitor_data_collection_rule" "hub_container_insights" {
+  name                = "MSCI-${var.location}-${var.customer_name}-zipline-aks"
+  resource_group_name = azurerm_resource_group.hub_rg.name
+  location            = azurerm_resource_group.hub_rg.location
+  kind                = "Linux"
+
+  destinations {
+    log_analytics {
+      workspace_resource_id = azurerm_log_analytics_workspace.aks.id
+      name                  = "ciworkspace"
+    }
+  }
+
+  data_flow {
+    streams      = ["Microsoft-ContainerInsights-Group-Default"]
+    destinations = ["ciworkspace"]
+  }
+
+  data_sources {
+    extension {
+      streams        = ["Microsoft-ContainerInsights-Group-Default"]
+      extension_name = "ContainerInsights"
+      extension_json = jsonencode({
+        "dataCollectionSettings" : {
+          "enableContainerLogV2" : true
+        }
+      })
+      name = "ContainerInsightsExtension"
+    }
+  }
+
+  description = "DCR for Azure Monitor Container Insights on hub AKS cluster"
+}
+
+resource "azurerm_monitor_data_collection_rule_association" "hub_container_insights" {
+  name                    = "ContainerInsightsExtension"
+  target_resource_id      = azurerm_kubernetes_cluster.hub_cluster.id
+  data_collection_rule_id = azurerm_monitor_data_collection_rule.hub_container_insights.id
+  description             = "Association of container insights data collection rule for hub AKS cluster."
 }
 
 resource "azurerm_role_assignment" "workload_logs_reader" {
@@ -253,7 +294,6 @@ resource "azurerm_kubernetes_cluster" "kyuubi_cluster" {
   lifecycle {
     ignore_changes = [
       default_node_pool[0].upgrade_settings,
-      oms_agent,
     ]
   }
 }
@@ -282,7 +322,7 @@ resource "azurerm_monitor_data_collection_rule" "kyuubi_container_insights" {
 
   destinations {
     log_analytics {
-      workspace_resource_id = azurerm_log_analytics_workspace.aks.id
+      workspace_resource_id = azurerm_log_analytics_workspace.kyuubi.id
       name                  = "ciworkspace"
     }
   }

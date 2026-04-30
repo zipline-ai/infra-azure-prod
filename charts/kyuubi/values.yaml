@@ -55,6 +55,9 @@ image:
 
 imagePullSecrets: []
 
+# Whether to automount the default projected SA token (set false when using a long-lived token secret)
+automountServiceAccountToken: true
+
 # ServiceAccount used for Kyuubi create/list/delete pod in Kubernetes
 serviceAccount:
   # Specifies whether a ServiceAccount should be created
@@ -62,8 +65,8 @@ serviceAccount:
   # Specifies ServiceAccount name to be used (created if `create: true`)
   name: ~
   # Annotations to add to the ServiceAccount
-  annotations:
-    azure.workload.identity/client-id: "52a48acf-9dd6-476c-b432-ac46995a7173"
+  # Override in environment-specific values (e.g., dev/kyuubi-values.yaml.tpl)
+  annotations: {}
 
 # priorityClass used for Kyuubi server pod
 priorityClass:
@@ -198,6 +201,9 @@ kyuubiConf:
       # Operation logs - these are viewable in Kyuubi's Web UI
       kyuubi.operation.log.dir.root={{ .Values.logging.workDir }}/{{ .Values.logging.operationLogDir }}
       kyuubi.engine.operation.log.dir.root={{ .Values.logging.workDir }}/{{ .Values.logging.engineOperationLogDir }}
+      # Spark UI URL pattern for Kubernetes - populates appUrl in batch status
+      # This URL is cluster-internal; for external access use Spark History Server
+      kyuubi.kubernetes.spark.appUrlPattern=http://{{ "{{SPARK_DRIVER_SVC}}" }}.kyuubi.svc:4040
     'log4j2.xml': |
       <?xml version="1.0" encoding="UTF-8"?>
       <Configuration status="INFO">
@@ -249,21 +255,8 @@ kyuubiConf:
 hadoopConf:
   # $HADOOP_CONF_DIR directory
   dir: /opt/hadoop/conf
-  # Configuration files from the specified keys (file name) and values (file content)
-  files:
-    'core-site.xml': |
-      <?xml version="1.0"?>
-      <configuration>
-        <!-- Azure ABFS OAuth with Workload Identity -->
-        <property>
-          <name>fs.azure.account.auth.type.ziplineai2.dfs.core.windows.net</name>
-          <value>OAuth</value>
-        </property>
-        <property>
-          <name>fs.azure.account.oauth.provider.type.ziplineai2.dfs.core.windows.net</name>
-          <value>org.apache.hadoop.fs.azurebfs.oauth2.MsiTokenProvider</value>
-        </property>
-      </configuration>
+  # Configuration files - override in environment-specific values (e.g., dev/kyuubi-values.yaml.tpl)
+  files: {}
   #files:
   # 'core-site.xml': |
   #   <?xml version="1.0"?>

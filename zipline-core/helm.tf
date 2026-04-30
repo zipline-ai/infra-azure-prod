@@ -57,7 +57,7 @@ resource "helm_release" "zipline_orchestration" {
       cosmos_table_partitions_dataset     = "TABLE_PARTITIONS"
       cosmos_data_quality_metrics_dataset = "DATA_QUALITY_METRICS"
 
-      kyuubi_host            = var.kyuubi_host != "" ? var.kyuubi_host : "${var.customer_name}-zipline-kyuubi.${var.location}.cloudapp.azure.com"
+      kyuubi_host            = var.kyuubi_host != "" ? var.kyuubi_host : "http://${var.customer_name}-zipline-kyuubi.${var.location}.cloudapp.azure.com"
       kyuubi_port            = var.kyuubi_port
       kyuubi_auth_enabled    = var.enable_kyuubi_auth
       kyuubi_username_secret = var.kyuubi_username_secret
@@ -519,8 +519,10 @@ resource "helm_release" "kyuubi" {
   values = [
     templatefile("${path.module}/kyuubi-values.yaml.tpl", {
       workload_identity_client_id = var.kyuubi_workload_identity_client_id
+      azure_tenant_id             = data.azurerm_client_config.current.tenant_id
       azure_storage_account_name  = var.azure_storage_account_name
       kyuubi_dns_label            = "${var.customer_name}-zipline-kyuubi"
+      event_log_dir               =  "abfss://warehouse@${var.azure_storage_account_name}.dfs.core.windows.net/spark-events"
     })
   ]
 
