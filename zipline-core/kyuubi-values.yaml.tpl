@@ -163,7 +163,19 @@ hadoopConf:
         </property>
         <property>
           <name>fs.azure.account.oauth.provider.type.${azure_storage_account_name}.dfs.core.windows.net</name>
-          <value>org.apache.hadoop.fs.azurebfs.oauth2.MsiTokenProvider</value>
+          <value>org.apache.hadoop.fs.azurebfs.oauth2.WorkloadIdentityTokenProvider</value>
+        </property>
+        <property>
+          <name>fs.azure.account.oauth2.client.id.${azure_storage_account_name}.dfs.core.windows.net</name>
+          <value>${workload_identity_client_id}</value>
+        </property>
+        <property>
+          <name>fs.azure.account.oauth2.msi.tenant</name>
+          <value>${azure_tenant_id}</value>
+        </property>
+        <property>
+          <name>fs.azure.account.oauth2.token.file</name>
+          <value>/var/run/secrets/azure/tokens/azure-identity-token</value>
         </property>
       </configuration>
   filesFrom: []
@@ -181,6 +193,14 @@ sparkConf:
       spark.kubernetes.namespace=kyuubi
       spark.kubernetes.authenticate.driver.serviceAccountName=kyuubi
       spark.kubernetes.authenticate.executor.serviceAccountName=kyuubi
+      # Azure Blob Storage dependencies are provided via SPARK_DIST_CLASSPATH
+      # and pre-downloaded by init container (no runtime download needed)
+      # Spark History Server - event logging
+      spark.eventLog.enabled=true
+      spark.eventLog.dir=${event_log_dir}
+      spark.eventLog.compress=true
+      # Clean up pods after job completion
+      spark.kubernetes.executor.deleteOnTermination=true
       spark.driver.extraJavaOptions=-Divy.cache.dir=/tmp -Divy.home=/tmp
       spark.executor.extraJavaOptions=-Divy.cache.dir=/tmp -Divy.home=/tmp
       # Azure Workload Identity labels for driver and executor pods
