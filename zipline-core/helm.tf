@@ -588,6 +588,14 @@ resource "terraform_data" "kyuubi_pod_restart_on_token_rotation" {
   triggers_replace = [time_rotating.kyuubi_sa_token[0].rotation_rfc3339]
 
   provisioner "local-exec" {
+    # KUBECONFIG=/dev/null prevents kubectl from merging the runner's existing
+    # ~/.kube/config — without this, when the runner already has the same
+    # cluster cached with `client-cert-data`, kubectl errors with
+    # "client-cert-data and client-cert are both specified" before making any
+    # API call.
+    environment = {
+      KUBECONFIG = "/dev/null"
+    }
     command = <<-EOT
       set -euo pipefail
       CA=$(mktemp); CERT=$(mktemp); KEY=$(mktemp)
