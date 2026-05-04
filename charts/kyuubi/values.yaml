@@ -94,8 +94,13 @@ rbac:
 # restart the pod to force a fresh KubernetesClient init.
 restartCronJob:
   enabled: true
-  # Every 6 hours. Bumps the maximum window of 401-induced batch failures to ~6h.
-  schedule: "0 */6 * * *"
+  # Every 2 hours. Empirically, kyuubi-0 starts seeing 401s from fabric8 watches
+  # ~3.5h after restart (AKS rotates its SA signing key on a tighter cadence than
+  # we initially assumed). A 2h interval keeps us comfortably under that window.
+  # Cost: 12 restarts/day, each ~80s — negligible vs the alternative of broken
+  # batch tracking on Hub. Revisit if/when the underlying fabric8 token-refresh-
+  # on-401 issue gets fixed upstream.
+  schedule: "0 */2 * * *"
   # alpine/k8s ships kubectl on top of alpine (has /bin/sh, supports the
   # multi-step rollout-restart + rollout-status shell pipeline below).
   # MCR's kubectl image is distroless and has no shell, so we can't use it here.
