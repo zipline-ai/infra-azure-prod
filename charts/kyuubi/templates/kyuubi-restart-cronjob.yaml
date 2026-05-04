@@ -37,11 +37,12 @@ metadata:
 rules:
   # `kubectl rollout restart` is implemented as a strategic-merge patch on the
   # StatefulSet's pod-template metadata.annotations (kubectl.kubernetes.io/restartedAt).
-  # `rollout status` reads the StatefulSet object.
+  # `rollout status` uses an informer (list + watch) on the StatefulSet object.
+  # We can't use resourceNames here because list/watch in modern K8s reject named
+  # resourceName scoping (the LIST request itself isn't tied to a single name).
   - apiGroups: ["apps"]
     resources: ["statefulsets"]
-    resourceNames: [{{ .Release.Name | quote }}]
-    verbs: ["get", "patch"]
+    verbs: ["get", "list", "watch", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

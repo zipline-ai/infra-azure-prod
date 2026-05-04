@@ -96,9 +96,10 @@ restartCronJob:
   enabled: true
   # Every 6 hours. Bumps the maximum window of 401-induced batch failures to ~6h.
   schedule: "0 */6 * * *"
-  # bitnami/kubectl is small and tracks recent K8s versions; pin a fixed tag
-  # rather than `latest` for reproducibility.
-  image: bitnami/kubectl:1.30.5
+  # alpine/k8s ships kubectl on top of alpine (has /bin/sh, supports the
+  # multi-step rollout-restart + rollout-status shell pipeline below).
+  # MCR's kubectl image is distroless and has no shell, so we can't use it here.
+  image: alpine/k8s:1.30.0
   rolloutTimeout: "10m"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
