@@ -531,86 +531,20 @@ resource "helm_release" "kyuubi" {
   ]
 }
 
-# Forces periodic rotation of the Kyuubi SA token. Why: AKS rotates the cluster's
-# ServiceAccount signing key on control-plane upgrades / certificate rotations
-# (~every 1-3 months). The legacy `kubernetes.io/service-account-token` Secret
-# below carries a JWT signed with whatever key was current at create time —
-# kube-apiserver rejects that JWT once the signing key rolls, but the Secret object
-# itself doesn't change, so terraform sees no drift and never reissues. Symptom:
-# Kyuubi can't watch its own pods, every batch goes ERROR_STATE. Trigger a forced
-# replacement on a cadence shorter than AKS's rotation to dodge this.
-resource "time_rotating" "kyuubi_sa_token" {
-  count         = var.kyuubi_host == "" ? 1 : 0
-  rotation_days = 30
-}
-
-# Long-lived SA token for Kyuubi K8s API access (avoids bound token expiry)
-# Must be created after helm_release.kyuubi which creates the kyuubi service account.
-resource "kubernetes_secret_v1" "kyuubi_sa_token" {
-  count    = var.kyuubi_host == "" ? 1 : 0
-  provider = kubernetes.kyuubi
-  metadata {
-    name      = "kyuubi-sa-token"
-    namespace = kubernetes_namespace_v1.kyuubi[0].metadata[0].name
-    annotations = {
-      "kubernetes.io/service-account.name" = "kyuubi"
-      # Surfacing the rotation timestamp in an annotation gives operators a quick
-      # `kubectl describe secret` view of when the token was last reissued, and
-      # makes the resource diff observable when rotation triggers.
-      "rotation-timestamp" = time_rotating.kyuubi_sa_token[0].rotation_rfc3339
-    }
-  }
-
-  type = "kubernetes.io/service-account-token"
-
-  lifecycle {
-    # Delete-and-recreate the Secret whenever time_rotating rolls. On recreate, the
-    # K8s ServiceAccount Token Controller fills in a fresh JWT signed with the
-    # current SA signing key.
-    replace_triggered_by = [time_rotating.kyuubi_sa_token[0]]
-  }
-
-  depends_on = [helm_release.kyuubi]
-}
-
-# Bounce the Kyuubi pod after the SA token rotates so it picks up the new JWT.
-# Kyuubi loads the SA token from the mounted Secret at startup and doesn't watch
-# for updates, so without this the new token sits unused until the next manual
-# restart. Triggered AFTER the Secret recreate completes (via depends_on), so the
-# restart reads the freshly-issued JWT.
-#
-# Auth: writes the existing cluster cert/key vars to temp files and passes them to
-# kubectl via flags. Requires kubectl on the runner.
-resource "terraform_data" "kyuubi_pod_restart_on_token_rotation" {
-  count = var.kyuubi_host == "" ? 1 : 0
-
-  # Re-run when the rotation timestamp changes.
-  triggers_replace = [time_rotating.kyuubi_sa_token[0].rotation_rfc3339]
-
-  provisioner "local-exec" {
-    # KUBECONFIG=/dev/null prevents kubectl from merging the runner's existing
-    # ~/.kube/config — without this, when the runner already has the same
-    # cluster cached with `client-cert-data`, kubectl errors with
-    # "client-cert-data and client-cert are both specified" before making any
-    # API call.
-    environment = {
-      KUBECONFIG = "/dev/null"
-    }
-    command = <<-EOT
-      set -euo pipefail
-      CA=$(mktemp); CERT=$(mktemp); KEY=$(mktemp)
-      trap 'rm -f "$CA" "$CERT" "$KEY"' EXIT
-      printf '%s' '${var.kyuubi_aks_cluster_ca_certificate}' | base64 -d > "$CA"
-      printf '%s' '${var.kyuubi_aks_client_certificate}'    | base64 -d > "$CERT"
-      printf '%s' '${var.kyuubi_aks_client_key}'            | base64 -d > "$KEY"
-      KUBE="kubectl --server=${var.kyuubi_aks_host} --certificate-authority=$CA --client-certificate=$CERT --client-key=$KEY -n kyuubi"
-      $KUBE rollout restart statefulset/kyuubi
-      $KUBE rollout status   statefulset/kyuubi --timeout=300s
-    EOT
-  }
-
-  depends_on = [kubernetes_secret_v1.kyuubi_sa_token]
-}
+# NOTE: Previously this file contained a time_rotating + kubernetes_secret_v1 +
+# terraform_data trio that recreated a legacy `kubernetes.io/service-account-token`
+# Secret on a 30-day cadence and bounced the Kyuubi pod via local-exec kubectl.
+# That whole machinery has been replaced by an in-cluster CronJob defined in the
+# Kyuubi Helm chart (charts/kyuubi/templates/kyuubi-restart-cronjob.yaml). Reasons:
+#   - Kyuubi reads its K8s creds from the projected ServiceAccount token at
+#     /var/run/secrets/kubernetes.io/serviceaccount/token, NOT from the legacy
+#     Secret — so the recreate was a no-op and the actual fix was the
+#     local-exec rollout restart.
+#   - 30-day cadence was empirically too long: AKS rotates its SA signing key
+#     every ~3.5 hours in dev, so the in-flight JWT goes stale and fabric8's
+#     watch loop 401s long before the next terraform-driven restart.
+# The CronJob runs every 2h with proper RBAC, no Azure auth round-trip, and no
+# terraform_data side effects to maintain.
 
 # Deploy Spark History Server (to kyuubi cluster)
 resource "helm_release" "spark_history_server" {
