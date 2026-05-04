@@ -1,0 +1,102 @@
+{{/*
+  Periodic Kyuubi server restart.
+
+  Why this exists:
+    Kyuubi server's fabric8 K8s client (6.13.1 in upstream Kyuubi 1.10.0) holds
+    long-running websocket watches against the kube-apiserver to track Spark
+    driver pods. AKS rotates its ServiceAccount signing key on its own cadence
+    (control-plane upgrades, monthly cycles). When that happens, the in-flight
+    JWT becomes invalid server-side immediately, but the kubelet doesn't refresh
+    the projected token file until the next time-based rotation. fabric8 6.13.1's
+    watch-reconnect path reuses the cached token header rather than re-reading
+    the file, so the watch stays 401-broken until *something* forces a fresh
+    KubernetesClient init.
+
+    The cleanest "force a fresh client" is restarting the Kyuubi pod. This
+    CronJob does exactly that on a fixed schedule, bounding the maximum window
+    of 401-induced batch failures to one cron interval.
+
+    Long-term, the right fix is in fabric8/Kyuubi (force token re-read on watch
+    401, or AKS surfacing signing-key rotation events to the kubelet). Until
+    that lands, this is the operational stopgap.
+*/}}
+{{- if .Values.restartCronJob.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-restart
+  labels:
+    {{- include "kyuubi.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-restart
+  labels:
+    {{- include "kyuubi.labels" . | nindent 4 }}
+rules:
+  # `kubectl rollout restart` is implemented as a strategic-merge patch on the
+  # StatefulSet's pod-template metadata.annotations (kubectl.kubernetes.io/restartedAt).
+  # `rollout status` uses an informer (list + watch) on the StatefulSet object.
+  # We can't use resourceNames here because list/watch in modern K8s reject named
+  # resourceName scoping (the LIST request itself isn't tied to a single name).
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-restart
+  labels:
+    {{- include "kyuubi.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-restart
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Release.Name }}-restart
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-restart
+  labels:
+    {{- include "kyuubi.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.restartCronJob.schedule | quote }}
+  # Restart cycles are independent — if a previous run is still rolling, skip.
+  concurrencyPolicy: Forbid
+  # Don't retroactively run missed schedules (pod recovery, cluster outages, etc).
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: {{ .Values.restartCronJob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.restartCronJob.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: {{ .Values.restartCronJob.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          labels:
+            {{- include "kyuubi.labels" . | nindent 12 }}
+            app.kubernetes.io/component: kyuubi-restart
+        spec:
+          serviceAccountName: {{ .Release.Name }}-restart
+          restartPolicy: Never
+          containers:
+            - name: kubectl
+              image: {{ .Values.restartCronJob.image }}
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  echo "Restarting statefulset/{{ .Release.Name }} in namespace {{ .Release.Namespace }}"
+                  kubectl rollout restart statefulset/{{ .Release.Name }} -n {{ .Release.Namespace }}
+                  kubectl rollout status  statefulset/{{ .Release.Name }} -n {{ .Release.Namespace }} --timeout={{ .Values.restartCronJob.rolloutTimeout }}
+                  echo "Restart complete."
+              resources:
+                {{- toYaml .Values.restartCronJob.resources | nindent 16 }}
+{{- end }}
