@@ -87,6 +87,36 @@ rbac:
       resources: ["pods", "services", "configmaps", "persistentvolumeclaims"]
       verbs: ["create", "get", "list", "watch", "patch", "delete", "deletecollection"]
 
+# Periodic restart of the Kyuubi statefulset.
+# See templates/kyuubi-restart-cronjob.yaml for the full rationale — short version:
+# fabric8 6.13.1 in upstream Kyuubi 1.10.0 doesn't recover cleanly from AKS SA
+# signing-key rotation on long-running websocket watches, so we periodically
+# restart the pod to force a fresh KubernetesClient init.
+restartCronJob:
+  enabled: true
+  # Every 2 hours. Empirically, kyuubi-0 starts seeing 401s from fabric8 watches
+  # ~3.5h after restart (AKS rotates its SA signing key on a tighter cadence than
+  # we initially assumed). A 2h interval keeps us comfortably under that window.
+  # Cost: 12 restarts/day, each ~80s — negligible vs the alternative of broken
+  # batch tracking on Hub. Revisit if/when the underlying fabric8 token-refresh-
+  # on-401 issue gets fixed upstream.
+  schedule: "0 */2 * * *"
+  # alpine/k8s ships kubectl on top of alpine (has /bin/sh, supports the
+  # multi-step rollout-restart + rollout-status shell pipeline below).
+  # MCR's kubectl image is distroless and has no shell, so we can't use it here.
+  image: alpine/k8s:1.30.0
+  rolloutTimeout: "10m"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  ttlSecondsAfterFinished: 86400
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
 service:
   # Service type: ClusterIP, NodePort, or LoadBalancer
   type: ClusterIP
