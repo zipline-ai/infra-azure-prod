@@ -19,8 +19,8 @@ apiVersion: v2
 name: kyuubi
 description: A Helm chart for Kyuubi server
 type: application
-version: 0.1.5
-appVersion: 1.10.0
+version: 0.1.6
+appVersion: 1.10.2
 home: https://kyuubi.apache.org
 icon: https://raw.githubusercontent.com/apache/kyuubi/master/docs/imgs/logo.png
 sources:
