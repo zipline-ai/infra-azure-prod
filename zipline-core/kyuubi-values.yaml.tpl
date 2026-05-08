@@ -15,7 +15,12 @@ updateStrategy:
 image:
   repository: apache/kyuubi
   pullPolicy: IfNotPresent
-  tag: 1.10.0-spark
+  # 1.10.2 picks up KYUUBI-6883: Kyuubi configures fabric8's KubernetesClient with
+  # withOauthTokenProvider() instead of withOauthToken(), so the projected SA token
+  # file is re-read on every kube-apiserver request. Closes the watch-401 loop that
+  # AKS signing-key rotation used to expose, removing the need for periodic restarts
+  # or long-lived SA-token rotation.
+  tag: 1.10.2-spark
 
 imagePullSecrets: []
 
