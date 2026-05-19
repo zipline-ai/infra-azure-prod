@@ -97,23 +97,19 @@ spec:
         app: starrocks
     spec:
       serviceAccountName: orchestration-sa
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-      {{- toYaml . | nindent 8 }}
-      {{- end }}
       initContainers:
         # Download PostgreSQL JDBC driver (cached in PVC across restarts)
         - name: download-jdbc-driver
-          image: busybox:1.36
+          image: {{ .Values.starrocks.utilityImage | quote }}
           command:
-            - sh
+            - bash
             - -c
             - |
               if [ -f /jdbc-drivers/postgresql-42.7.4.jar ]; then
                 echo "JDBC driver already cached, skipping download"
               else
                 echo "Downloading PostgreSQL JDBC driver..."
-                wget -T 30 -O /jdbc-drivers/postgresql-42.7.4.jar \
+                curl -fsSL --connect-timeout 30 -o /jdbc-drivers/postgresql-42.7.4.jar \
                   "https://jdbc.postgresql.org/download/postgresql-42.7.4.jar"
                 echo "JDBC driver downloaded successfully"
               fi
@@ -124,7 +120,7 @@ spec:
       containers:
         # Combined FE + BE container using StarRocks allin1 image
         - name: starrocks
-          image: starrocks/allin1-ubuntu:3.5.2
+          image: {{ .Values.starrocks.image | quote }}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9030
@@ -233,8 +229,12 @@ kind: Job
 metadata:
   name: starrocks-init-catalog
   namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "10"
 spec:
-  ttlSecondsAfterFinished: 300
+  ttlSecondsAfterFinished: 86400
   template:
     spec:
       serviceAccountName: orchestration-sa
@@ -242,7 +242,7 @@ spec:
       initContainers:
         # Wait for StarRocks to actually accept queries (not just TCP)
         - name: wait-for-starrocks
-          image: mysql:8.0
+          image: {{ .Values.starrocks.mysqlImage | quote }}
           command:
             - sh
             - -c
@@ -260,14 +260,14 @@ spec:
               exit 1
         # Wait for PostgreSQL (Iceberg catalog backend)
         - name: wait-for-postgres
-          image: busybox:1.36
+          image: {{ .Values.starrocks.utilityImage | quote }}
           command:
-            - sh
+            - bash
             - -c
             - |
               echo "Waiting for PostgreSQL..."
               for i in $(seq 1 30); do
-                if nc -z {{ $dbHost | quote }} {{ $dbPort | quote }} 2>/dev/null; then
+                if timeout 5 bash -c '</dev/tcp/{{ $dbHost }}/{{ $dbPort }}' 2>/dev/null; then
                   echo "PostgreSQL is ready"
                   exit 0
                 fi
@@ -276,7 +276,7 @@ spec:
               exit 1
       containers:
         - name: init-catalog
-          image: mysql:8.0
+          image: {{ .Values.starrocks.mysqlImage | quote }}
           env:
             - name: AZURE_STORAGE_ACCOUNT_NAME
               value: {{ .Values.azure.storage_account_name | quote }}
@@ -284,6 +284,26 @@ spec:
               value: {{ .Values.azure.storage_account_key | quote }}
             - name: AZURE_TENANT_ID
               value: {{ .Values.azure.tenant_id | quote }}
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: azure-sp-client-id
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-sp-credentials
+                  key: azure-sp-client-secret
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
             - name: SKIP_MISSING_REQUIRED_ENV
               value: {{ .Values.starrocks.catalogInit.skipMissingRequiredEnv | quote }}
             - name: CATALOG_DATABRICKS_UNITY_ENABLED
@@ -298,22 +318,22 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: databricks-sp-credentials
-                  key: databricks_client_id
+                  key: databricks-client-id
             - name: DATABRICKS_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: databricks-sp-credentials
-                  key: databricks_client_secret
+                  key: databricks-client-secret
             - name: SNOWFLAKE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   name: snowflake-polaris-credentials
-                  key: snowflake_polaris_client_id
+                  key: snowflake-polaris-client-id
             - name: SNOWFLAKE_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: snowflake-polaris-credentials
-                  key: snowflake_polaris_client_secret
+                  key: snowflake-polaris-client-secret
             - name: SNOWFLAKE_ACCOUNT
               value: {{ .Values.starrocks.catalogInit.env.SNOWFLAKE_ACCOUNT | quote }}
             - name: POLARIS_WAREHOUSE
@@ -325,8 +345,6 @@ spec:
             - -c
             - |
               echo "Creating Iceberg external catalog in StarRocks..."
-              DB_USERNAME="$(cat /mnt/secrets-store/username)"
-              DB_PASSWORD="$(cat /mnt/secrets-store/password)"
 
               sql_escape() {
                 printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -402,16 +420,26 @@ spec:
               DB_PASSWORD_ESCAPED="$(sql_escape "$DB_PASSWORD")"
               AZURE_STORAGE_ACCOUNT_KEY_ESCAPED="$(sql_escape "$AZURE_STORAGE_ACCOUNT_KEY")"
 
+              if [ -z "$DB_USERNAME_ESCAPED" ] || [ -z "$DB_PASSWORD_ESCAPED" ]; then
+                echo "Database credentials are missing from db-credentials secret"
+                exit 1
+              fi
+
               cat > /tmp/init-catalog.sql <<EOF
               -- Create Iceberg external catalog pointing to the Azure PostgreSQL Flexible Server.
-              CREATE EXTERNAL CATALOG IF NOT EXISTS iceberg
+              DROP CATALOG IF EXISTS iceberg;
+              CREATE EXTERNAL CATALOG iceberg
               PROPERTIES (
                   "type" = "iceberg",
                   "iceberg.catalog.type" = "jdbc",
                   "iceberg.catalog.uri" = "jdbc:postgresql://{{ $dbHost }}:{{ $dbPort }}/{{ .Values.database.orchestration.database }}?sslmode=require",
+                  "driver_url" = "file:///opt/starrocks/fe/lib/postgresql-42.7.4.jar",
+                  "driver_class" = "org.postgresql.Driver",
                   "iceberg.catalog.warehouse" = "abfss://{{ .Values.azure.warehouse_container_name }}@{{ .Values.azure.storage_account_name }}.dfs.core.windows.net/",
                   "iceberg.catalog.jdbc.user" = "${DB_USERNAME_ESCAPED}",
                   "iceberg.catalog.jdbc.password" = "${DB_PASSWORD_ESCAPED}",
+                  "jdbc.user" = "${DB_USERNAME_ESCAPED}",
+                  "jdbc.password" = "${DB_PASSWORD_ESCAPED}",
                   "iceberg.catalog.jdbc.init-catalog-tables" = "true",
                   "azure.adls2.storage_account" = "{{ .Values.azure.storage_account_name }}",
                   "azure.adls2.shared_key" = "${AZURE_STORAGE_ACCOUNT_KEY_ESCAPED}"
@@ -447,7 +475,7 @@ spec:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: "db-secret-provider"
+              secretProviderClass: "zipline-secret-provider"
         - name: catalog-sql
           configMap:
             name: starrocks-catalog-sql

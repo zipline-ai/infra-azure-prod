@@ -213,7 +213,23 @@ variable "admin_email" {
   description = "Email for receiving certificate updates"
 }
 
-# Databricks Unity Catalog integration (optional)
+# Data Explorer (optional)
+
+variable "azure_sp_client_id" {
+  type        = string
+  description = "Client ID of azure service principal with access to the catalogs"
+  sensitive   = true
+  default     = ""
+}
+
+variable "azure_sp_client_secret" {
+  type        = string
+  description = "Client secret of azure service principal with access to the catalogs"
+  sensitive   = true
+  default     = ""
+}
+
+## Databricks Unity Catalog integration (optional)
 variable "databricks_client_id" {
   type        = string
   description = "Databricks service principal Application ID (UUID) for Unity Catalog OAuth. Leave empty to skip Databricks integration."
@@ -240,7 +256,7 @@ variable "databricks_warehouse" {
   default     = ""
 }
 
-# Snowflake Open Catalog (Polaris, Iceberg REST) integration (optional)
+## Snowflake Open Catalog (Polaris, Iceberg REST) integration (optional)
 variable "snowflake_polaris_client_id" {
   type        = string
   description = "Snowflake service principal for Catalog OAuth. Leave empty to skip Snowflake integration."

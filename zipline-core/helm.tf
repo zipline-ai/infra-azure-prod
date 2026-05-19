@@ -96,13 +96,13 @@ resource "helm_release" "zipline_orchestration" {
       fetcher_replicas = var.fetcher_replicas
 
       # Databricks service principal secret ARN (empty if not configured)
-      databricks_host          = var.databricks_host
-      databricks_warehouse     = var.databricks_warehouse
+      databricks_host      = var.databricks_host
+      databricks_warehouse = var.databricks_warehouse
 
       # Snowflake service principal secret ARN (empty if not configured)
-      snowflake_account                = var.snowflake_account
-      polaris_warehouse                = var.polaris_warehouse
-      polaris_principal_role           = var.polaris_principal_role
+      snowflake_account      = var.snowflake_account
+      polaris_warehouse      = var.polaris_warehouse
+      polaris_principal_role = var.polaris_principal_role
 
 
       zipline_auth_enabled            = var.zipline_auth_enabled
@@ -207,6 +207,18 @@ resource "azurerm_key_vault_secret" "sso_client_secret" {
 
 #############################################################
 # Key Vault secrets for catalog access
+
+resource "azurerm_key_vault_secret" "azure_sp_client_id" {
+  name         = "azure-sp-client-id"
+  value        = var.azure_sp_client_id
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "azure_sp_client_secret" {
+  name         = "azure-sp-client-secret"
+  value        = var.azure_sp_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
 
 resource "azurerm_key_vault_secret" "databricks_client_id" {
   name         = "databricks-client-id"
@@ -562,7 +574,7 @@ resource "helm_release" "kyuubi" {
       azure_tenant_id             = data.azurerm_client_config.current.tenant_id
       azure_storage_account_name  = var.azure_storage_account_name
       kyuubi_dns_label            = "${var.customer_name}-zipline-kyuubi"
-      event_log_dir               =  "abfss://warehouse@${var.azure_storage_account_name}.dfs.core.windows.net/spark-events"
+      event_log_dir               = "abfss://warehouse@${var.azure_storage_account_name}.dfs.core.windows.net/spark-events"
     })
   ]
 
@@ -573,7 +585,7 @@ resource "helm_release" "kyuubi" {
 
 # Deploy Spark History Server (to kyuubi cluster)
 resource "helm_release" "spark_history_server" {
-  count    = var.kyuubi_host == "" &&  var.spark_history_server_url == "" ? 1 : 0
+  count    = var.kyuubi_host == "" && var.spark_history_server_url == "" ? 1 : 0
   provider = helm.kyuubi
 
   name             = "spark-history-server"

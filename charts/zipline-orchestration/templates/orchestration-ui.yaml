@@ -61,7 +61,9 @@ spec:
               value: "http://fetcher-service"
             {{- end }}
             - name: STARROCKS_HOST
-              value: "http://starrocks-service"
+              value: {{ .Values.starrocks.host | quote }}
+            - name: STARROCKS_PORT
+              value: {{ .Values.starrocks.port | quote }}
             - name: DATA_EXPLORER
               value: "true"
             - name: AUTH_ENABLED
