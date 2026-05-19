@@ -100,6 +100,7 @@ cosmos:
 
 azure:
   location: "${azure_location}"
+  tenant_id: "${tenant_id}"
   storage_account_name: "${azure_storage_account_name}"
   storage_account_key: "${azure_storage_account_key}"
   warehouse_container_name: "${warehouse_container_name}"
@@ -144,3 +145,17 @@ auth:
   sso_client_id: "${sso_client_id}"
   idp_role_mapping: "${idp_role_mapping}"
   idp_group_claim: "${idp_group_claim}"
+
+starrocks:
+  catalogInit:
+    enabled: true
+    skipMissingRequiredEnv: true
+    env:
+      DATABRICKS_HOST: "${databricks_host}"
+      DATABRICKS_WAREHOUSE: "${databricks_warehouse}"
+      SNOWFLAKE_ACCOUNT: "${snowflake_account}"
+      POLARIS_WAREHOUSE: "${polaris_warehouse}"
+      POLARIS_PRINCIPAL_ROLE: "${polaris_principal_role}"
+    catalogs:
+      databricksUnity: true
+      snowflakePolaris: true

@@ -13,6 +13,7 @@ cosmos:
 # Azure configuration
 azure:
   location: ""
+  tenant_id: ""
   storage_account_name: ""
   storage_account_key: ""
   warehouse_container_name: ""
@@ -216,3 +217,17 @@ auth:
   sso_client_id: ""
   idp_role_mapping: ""
   idp_group_claim: ""
+
+starrocks:
+  catalogInit:
+    enabled: true
+    skipMissingRequiredEnv: true
+    env:
+      DATABRICKS_HOST: ""
+      DATABRICKS_WAREHOUSE: ""
+      SNOWFLAKE_ACCOUNT: ""
+      POLARIS_WAREHOUSE: ""
+      POLARIS_PRINCIPAL_ROLE: ""
+    catalogs:
+      databricksUnity: true
+      snowflakePolaris: true

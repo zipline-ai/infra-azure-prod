@@ -95,6 +95,16 @@ resource "helm_release" "zipline_orchestration" {
       deploy_fetcher   = var.deploy_fetcher
       fetcher_replicas = var.fetcher_replicas
 
+      # Databricks service principal secret ARN (empty if not configured)
+      databricks_host          = var.databricks_host
+      databricks_warehouse     = var.databricks_warehouse
+
+      # Snowflake service principal secret ARN (empty if not configured)
+      snowflake_account                = var.snowflake_account
+      polaris_warehouse                = var.polaris_warehouse
+      polaris_principal_role           = var.polaris_principal_role
+
+
       zipline_auth_enabled            = var.zipline_auth_enabled
       zipline_auth_url                = var.ui_domain != "" ? "https://${var.ui_domain}" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000"
       zipline_auth_jwksUrl            = var.ui_domain != "" ? "https://${var.ui_domain}/api/auth/jwks" : "http://zipline-orchestration-ui.zipline-system.svc.cluster.local:3000/api/auth/jwks"
@@ -194,6 +204,36 @@ resource "azurerm_key_vault_secret" "sso_client_secret" {
   value        = var.sso_client_secret
   key_vault_id = data.azurerm_key_vault.main.id
 }
+
+#############################################################
+# Key Vault secrets for catalog access
+
+resource "azurerm_key_vault_secret" "databricks_client_id" {
+  name         = "databricks-client-id"
+  value        = var.databricks_client_id
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+
+resource "azurerm_key_vault_secret" "databricks_client_secret" {
+  name         = "databricks-client-secret"
+  value        = var.databricks_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "snowflake_polaris_client_id" {
+  name         = "snowflake-polaris-client-id"
+  value        = var.snowflake_polaris_client_id
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+
+resource "azurerm_key_vault_secret" "snowflake-polaris_client_secret" {
+  name         = "snowflake-polaris-client-secret"
+  value        = var.snowflake_polaris_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
 
 #############################################################
 
