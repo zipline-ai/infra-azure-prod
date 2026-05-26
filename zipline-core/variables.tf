@@ -214,6 +214,11 @@ variable "admin_email" {
 }
 
 # Data Explorer (optional)
+variable "enable_data_explorer" {
+  type = bool
+  description = "Adds data explorer to the UI with catalogs based on databricks and snowflake integration"
+  default = false
+}
 
 variable "azure_sp_client_id" {
   type        = string

@@ -60,12 +60,14 @@ spec:
             - name: FETCHER_BASE_URL
               value: "http://fetcher-service"
             {{- end }}
+            {{- if .Values.starrocks.enabled }}
             - name: STARROCKS_HOST
               value: {{ .Values.starrocks.host | quote }}
             - name: STARROCKS_PORT
               value: {{ .Values.starrocks.port | quote }}
             - name: DATA_EXPLORER
               value: "true"
+            {{- end }}
             - name: AUTH_ENABLED
               value: "{{ .Values.auth.enabled }}"
             {{- if .Values.auth.enabled }}

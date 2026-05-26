@@ -95,6 +95,9 @@ resource "helm_release" "zipline_orchestration" {
       deploy_fetcher   = var.deploy_fetcher
       fetcher_replicas = var.fetcher_replicas
 
+      # Data Explorer requires Zipline auth to be enabled
+      data_explorer_enabled = var.zipline_auth_enabled && var.enable_data_explorer
+
       # Databricks service principal secret ARN (empty if not configured)
       databricks_host      = var.databricks_host
       databricks_warehouse = var.databricks_warehouse

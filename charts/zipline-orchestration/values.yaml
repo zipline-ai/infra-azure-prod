@@ -219,6 +219,7 @@ auth:
   idp_group_claim: ""
 
 starrocks:
+  enabled: true
   image: "starrocks/allin1-ubuntu:4.0.10"
   mysqlImage: "mysql:8.0"
   utilityImage: "mcr.microsoft.com/azure-cli:2.73.0"
