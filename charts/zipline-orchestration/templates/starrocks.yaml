@@ -24,6 +24,7 @@ data:
     rpc_port = 9020
     query_port = 9030
     edit_log_port = 9010
+    meta_dir = ${STARROCKS_HOME}/fe/meta
     mysql_service_nio_enabled = true
     sys_log_level = INFO
     tablet_create_timeout_second = 60
@@ -38,7 +39,7 @@ data:
     heartbeat_service_port = 9050
     brpc_port = 8060
     # Storage configuration
-    storage_root_path = ${STARROCKS_HOME}/storage
+    storage_root_path = ${STARROCKS_HOME}/be/storage
     mem_limit = 70%
 {{- if .Values.starrocks.catalogInit.enabled }}
 ---
@@ -96,6 +97,8 @@ spec:
     metadata:
       labels:
         app: starrocks
+      annotations:
+        starrocks.zipline.ai/release-revision: {{ .Release.Revision | quote }}
     spec:
       serviceAccountName: orchestration-sa
       initContainers:
