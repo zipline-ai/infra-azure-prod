@@ -155,6 +155,16 @@ resource "azurerm_cosmosdb_sql_container" "chronon_metadata" {
   default_ttl           = 432000
 }
 
+resource "azurerm_cosmosdb_sql_container" "enhanced_stats" {
+  name                  = "enhanced_stats"
+  resource_group_name   = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
+  account_name          = var.cosmos_account != "" ? var.cosmos_account : azurerm_cosmosdb_account.zipline_instance.0.name
+  database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
+  partition_key_paths   = ["/keyHash"]
+  partition_key_version = 2
+  default_ttl           = 432000
+}
+
 resource "azurerm_cosmosdb_sql_container" "table_partitions" {
   name                  = "table_partitions"
   resource_group_name   = var.cosmos_rg != "" ? var.cosmos_rg : azurerm_resource_group.cosmos_rg.0.name
