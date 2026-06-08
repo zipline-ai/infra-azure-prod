@@ -1,9 +1,9 @@
 # Local .terraform directories
 .terraform/
-zipline-core/dev_backend.tf
-zipline-core/dev_divergences.tf
+*/dev_backend.tf
+*/dev_divergences.tf
 *.binary
-zipline-core/.terraform.lock.hcl
+*/.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
