@@ -162,7 +162,7 @@ resource "azurerm_cosmosdb_sql_container" "enhanced_stats" {
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/keyHash"]
   partition_key_version = 2
-  default_ttl           = 2592000 # 30 days in seconds
+  default_ttl           = 63072000 # 2 years in seconds
 }
 
 resource "azurerm_cosmosdb_sql_container" "data_quality_metrics_batch" {
@@ -172,7 +172,7 @@ resource "azurerm_cosmosdb_sql_container" "data_quality_metrics_batch" {
   database_name         = var.cosmos_database != "" ? var.cosmos_database : azurerm_cosmosdb_sql_database.chronon.0.name
   partition_key_paths   = ["/keyHash"]
   partition_key_version = 2
-  default_ttl           = 2592000 # 30 days in seconds
+  default_ttl           = 63072000 # 2 years in seconds
 }
 
 resource "azurerm_cosmosdb_sql_container" "table_partitions" {
