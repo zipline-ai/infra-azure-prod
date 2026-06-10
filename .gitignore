@@ -1,5 +1,9 @@
 # Local .terraform directories
 .terraform/
+*/dev_backend.tf
+*/dev_divergences.tf
+*.binary
+*/.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
