@@ -105,6 +105,10 @@ resource "helm_release" "zipline_orchestration" {
       sso_provider_id                 = var.sso_provider_id
       sso_domain                      = var.sso_domain
       sso_issuer                      = var.sso_issuer
+      sso_use_saml                    = var.sso_use_saml
+      sso_saml_entry_point            = var.sso_saml_entry_point
+      sso_saml_issuer                 = var.sso_saml_issuer
+      sso_saml_callback_url           = var.sso_saml_callback_url
       sso_client_id                   = var.sso_client_id
       idp_role_mapping                = var.idp_role_mapping
       idp_group_claim                 = var.idp_group_claim
@@ -189,9 +193,16 @@ resource "azurerm_key_vault_secret" "microsoft_entra_oauth_client_secret" {
 }
 
 resource "azurerm_key_vault_secret" "sso_client_secret" {
-  count        = var.zipline_auth_enabled ? 1 : 0
+  count        = var.zipline_auth_enabled && !var.sso_use_saml ? 1 : 0
   name         = "sso-client-secret"
   value        = var.sso_client_secret
+  key_vault_id = data.azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "sso_saml_cert" {
+  count        = var.zipline_auth_enabled && var.sso_use_saml ? 1 : 0
+  name         = "sso-saml-cert"
+  value        = var.sso_saml_cert
   key_vault_id = data.azurerm_key_vault.main.id
 }
 
