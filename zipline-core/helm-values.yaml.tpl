@@ -131,7 +131,7 @@ flink:
   azureTenantId: "${flink_azure_tenant_id}"
 
 auth:
-  enabled: "${zipline_auth_enabled}"
+  enabled: ${zipline_auth_enabled}
   url: "${zipline_auth_url}"
   jwksUrl: "${zipline_auth_jwksUrl}"
   google_oauth_client_id: "${google_oauth_client_id}"
@@ -142,5 +142,9 @@ auth:
   sso_domain: "${sso_domain}"
   sso_issuer: "${sso_issuer}"
   sso_client_id: "${sso_client_id}"
+  sso_use_saml: ${sso_use_saml}
+  sso_saml_entry_point: "${sso_saml_entry_point}"
+  sso_saml_issuer: "${sso_saml_issuer}"
+  sso_saml_callback_url: "${sso_saml_callback_url}"
   idp_role_mapping: "${idp_role_mapping}"
   idp_group_claim: "${idp_group_claim}"
