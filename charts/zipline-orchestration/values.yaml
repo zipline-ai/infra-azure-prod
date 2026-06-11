@@ -228,6 +228,9 @@ starrocks:
   catalogInit:
     enabled: true
     skipMissingRequiredEnv: true
+    databricksRefresh:
+      enabled: true
+      schedule: "*/30 * * * *"
     env:
       DATABRICKS_HOST: ""
       DATABRICKS_WAREHOUSE: ""

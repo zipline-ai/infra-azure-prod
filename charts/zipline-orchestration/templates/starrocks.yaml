@@ -483,5 +483,135 @@ spec:
         - name: catalog-sql
           configMap:
             name: starrocks-catalog-sql
+{{- if and .Values.starrocks.catalogInit.catalogs.databricksUnity .Values.starrocks.catalogInit.databricksRefresh.enabled }}
+---
+# Periodically recreate the Databricks Unity catalog to refresh OAuth state.
+# StarRocks 3.5.x uses Iceberg's token-exchange refresh path, which Databricks
+# rejects for these service-principal credentials after the initial token ages.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: starrocks-refresh-databricks-catalog
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.starrocks.catalogInit.databricksRefresh.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: orchestration-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: refresh-databricks-catalog
+              image: {{ .Values.starrocks.mysqlImage | quote }}
+              env:
+                - name: AZURE_STORAGE_ACCOUNT_NAME
+                  value: {{ .Values.azure.storage_account_name | quote }}
+                - name: AZURE_TENANT_ID
+                  value: {{ .Values.azure.tenant_id | quote }}
+                - name: AZURE_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: azure-sp-credentials
+                      key: azure-sp-client-id
+                - name: AZURE_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: azure-sp-credentials
+                      key: azure-sp-client-secret
+                - name: SKIP_MISSING_REQUIRED_ENV
+                  value: {{ .Values.starrocks.catalogInit.skipMissingRequiredEnv | quote }}
+                {{- range $name, $value := .Values.starrocks.catalogInit.env }}
+                - name: {{ $name }}
+                  value: {{ $value | quote }}
+                {{- end }}
+                - name: DATABRICKS_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: databricks-sp-credentials
+                      key: databricks-client-id
+                - name: DATABRICKS_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: databricks-sp-credentials
+                      key: databricks-client-secret
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+
+                  sql_escape() {
+                    printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+                  }
+
+                  sed_escape_replacement() {
+                    sed -e 's/\\/\\\\/g' -e 's/[\/&]/\\&/g'
+                  }
+
+                  render_sql_template() {
+                    input_file="$1"
+                    output_file="$2"
+
+                    cp "$input_file" "$output_file"
+                    vars="$(grep -o '\${[A-Za-z_][A-Za-z0-9_]*}' "$input_file" | sed 's/[${}]//g' | sort -u)"
+                    for var in $vars; do
+                      eval "raw_value=\${$var:-}"
+                      escaped_value="$(sql_escape "$raw_value" | sed_escape_replacement)"
+                      sed -i "s/\${$var}/$escaped_value/g" "$output_file"
+                    done
+                  }
+
+                  catalog_file="/catalogs/databricks-unity.sql"
+                  requires="$(sed -n 's/^-- @requires:[[:space:]]*//p' "$catalog_file" | head -n1)"
+                  missing=""
+
+                  for var in $requires; do
+                    eval "value=\${$var:-}"
+                    if [ -z "$value" ]; then
+                      missing="$missing $var"
+                    fi
+                  done
+
+                  if [ -n "$missing" ]; then
+                    if [ "$SKIP_MISSING_REQUIRED_ENV" = "true" ]; then
+                      echo "Skipping Databricks catalog refresh; missing required env:$missing"
+                      exit 0
+                    fi
+
+                    echo "Cannot refresh Databricks catalog; missing required env:$missing"
+                    exit 1
+                  fi
+
+                  echo "Waiting for StarRocks to accept queries..."
+                  for i in $(seq 1 60); do
+                    if mysql -h starrocks-service -P 9030 -u root -e "SELECT 1" >/dev/null 2>&1; then
+                      break
+                    fi
+                    if [ "$i" = "60" ]; then
+                      echo "Timeout waiting for StarRocks"
+                      exit 1
+                    fi
+                    sleep 3
+                  done
+
+                  rendered="/tmp/rendered-databricks-unity.sql"
+                  render_sql_template "$catalog_file" "$rendered"
+
+                  echo "Refreshing databricks_unity catalog..."
+                  mysql -h starrocks-service -P 9030 -u root < "$rendered"
+                  mysql -h starrocks-service -P 9030 -u root -e "SHOW CATALOGS;"
+              volumeMounts:
+                - name: catalog-sql
+                  mountPath: /catalogs
+                  readOnly: true
+          volumes:
+            - name: catalog-sql
+              configMap:
+                name: starrocks-catalog-sql
+{{- end }}
 {{- end }}
 {{- end }}
