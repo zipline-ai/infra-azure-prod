@@ -213,3 +213,4 @@ To remove the Helm release:
 bash helm uninstall zipline-orchestration --namespace zipline-system
 
 Note: This will not delete the Azure resources (AKS, PostgreSQL, Key Vault, etc.). Those must be deleted separately if desired.
+Hub webhook links and CORS use `ingress.ui.externalUrl`. Terraform derives this public origin from `ui_domain` (`https://<ui_domain>`). Direct Helm installations can set `ingress.ui.externalUrl` explicitly. Without a configured domain or explicit origin, `HUB_FRONTEND_URL` is empty and webhook notifications show workflow IDs without links. Authentication retains its existing internal fallback.

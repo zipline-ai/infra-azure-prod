@@ -52,7 +52,7 @@ spec:
             - name: DATA_QUALITY_METRICS_DATASET
               value: "{{ .Values.cosmos.data_quality_metrics_dataset }}"
             - name: HUB_FRONTEND_URL
-              value: "http://orchestration-ui-service/"
+              value: {{ .Values.ingress.ui.externalUrl | default "" | quote }}
             - name: AZURE_REGION
               value: "{{ .Values.azure.location }}"
             - name: AZURE_STORAGE_ACCOUNT_NAME

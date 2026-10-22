@@ -64,6 +64,7 @@ ingress:
       nginx.ingress.kubernetes.io/proxy-body-size: "20m"
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
   ui:
+    externalUrl: ${jsonencode(frontend_external_url)}
     className: nginx-ui
     host: "${ui_dns_name}"
     annotations:

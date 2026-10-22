@@ -84,11 +84,12 @@ resource "helm_release" "zipline_orchestration" {
       orchestration_ui_static_ip_name  = azurerm_public_ip.ui_ingress.name
       orchestration_ui_static_ip       = azurerm_public_ip.ui_ingress.ip_address
 
-      hub_dns_name       = "${var.hub_domain}"
-      hub_external_url   = var.hub_external_url
-      ui_dns_name        = "${var.ui_domain}"
-      eval_dns_name      = "${var.eval_domain}"
-      cert_manager_email = var.admin_email
+      hub_dns_name          = "${var.hub_domain}"
+      hub_external_url      = var.hub_external_url
+      ui_dns_name           = "${var.ui_domain}"
+      frontend_external_url = var.ui_domain != "" ? "https://${var.ui_domain}" : ""
+      eval_dns_name         = "${var.eval_domain}"
+      cert_manager_email    = var.admin_email
 
       node_resource_group = var.aks_node_resource_group
 
